@@ -54,15 +54,17 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    NUMBER = 258,                  /* NUMBER  */
-    PLUS = 259,                    /* PLUS  */
-    MINUS = 260,                   /* MINUS  */
-    MULTIPLY = 261,                /* MULTIPLY  */
-    DIVIDE = 262,                  /* DIVIDE  */
-    LPAREN = 263,                  /* LPAREN  */
-    RPAREN = 264,                  /* RPAREN  */
-    END = 265,                     /* END  */
-    ID = 266                       /* ID  */
+    NOUN = 258,                    /* NOUN  */
+    VERB = 259,                    /* VERB  */
+    ADJECTIVE = 260,               /* ADJECTIVE  */
+    ADVERB = 261,                  /* ADVERB  */
+    PREP = 262,                    /* PREP  */
+    UNKNOWN = 263,                 /* UNKNOWN  */
+    ARTICLE = 264,                 /* ARTICLE  */
+    CONJ = 265,                    /* CONJ  */
+    DOT = 266,                     /* DOT  */
+    COMMA = 267,                   /* COMMA  */
+    EOL = 268                      /* EOL  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -71,25 +73,27 @@ extern int yydebug;
 #define YYEOF 0
 #define YYerror 256
 #define YYUNDEF 257
-#define NUMBER 258
-#define PLUS 259
-#define MINUS 260
-#define MULTIPLY 261
-#define DIVIDE 262
-#define LPAREN 263
-#define RPAREN 264
-#define END 265
-#define ID 266
+#define NOUN 258
+#define VERB 259
+#define ADJECTIVE 260
+#define ADVERB 261
+#define PREP 262
+#define UNKNOWN 263
+#define ARTICLE 264
+#define CONJ 265
+#define DOT 266
+#define COMMA 267
+#define EOL 268
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 11 "parser.y"
+#line 13 "2.y"
 
-    int val;
+    char *str;
 
-#line 93 "y.tab.h"
+#line 97 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

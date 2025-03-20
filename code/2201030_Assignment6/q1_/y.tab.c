@@ -67,16 +67,28 @@
 
 
 /* First part of user prologue.  */
-#line 1 "parser.y"
+#line 1 "1.y"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-void yyerror(const char *s);
-int yylex();
-int yyparse();
+void yyerror(const char *s)
+{
+    fprintf(stderr, "Error: %s\n", s);
+}
 
-#line 80 "y.tab.c"
+int yywrap()
+{
+    return 1;
+}
+
+extern int yylex();
+
+int column_count = 0;
+int value_count = 0;
+
+#line 92 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -120,15 +132,26 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    NUMBER = 258,                  /* NUMBER  */
-    PLUS = 259,                    /* PLUS  */
-    MINUS = 260,                   /* MINUS  */
-    MULTIPLY = 261,                /* MULTIPLY  */
-    DIVIDE = 262,                  /* DIVIDE  */
-    LPAREN = 263,                  /* LPAREN  */
-    RPAREN = 264,                  /* RPAREN  */
-    END = 265,                     /* END  */
-    ID = 266                       /* ID  */
+    SELECT = 258,                  /* SELECT  */
+    INSERT = 259,                  /* INSERT  */
+    INTO = 260,                    /* INTO  */
+    VALUES = 261,                  /* VALUES  */
+    UPDATE = 262,                  /* UPDATE  */
+    SET = 263,                     /* SET  */
+    DELETE = 264,                  /* DELETE  */
+    FROM = 265,                    /* FROM  */
+    CREATE = 266,                  /* CREATE  */
+    TABLE = 267,                   /* TABLE  */
+    WHERE = 268,                   /* WHERE  */
+    STAR = 269,                    /* STAR  */
+    EQUALS = 270,                  /* EQUALS  */
+    COMMA = 271,                   /* COMMA  */
+    SEMICOLON = 272,               /* SEMICOLON  */
+    LPAREN = 273,                  /* LPAREN  */
+    RPAREN = 274,                  /* RPAREN  */
+    IDENTIFIER = 275,              /* IDENTIFIER  */
+    NUMBER = 276,                  /* NUMBER  */
+    STRING = 277                   /* STRING  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -137,25 +160,36 @@ extern int yydebug;
 #define YYEOF 0
 #define YYerror 256
 #define YYUNDEF 257
-#define NUMBER 258
-#define PLUS 259
-#define MINUS 260
-#define MULTIPLY 261
-#define DIVIDE 262
-#define LPAREN 263
-#define RPAREN 264
-#define END 265
-#define ID 266
+#define SELECT 258
+#define INSERT 259
+#define INTO 260
+#define VALUES 261
+#define UPDATE 262
+#define SET 263
+#define DELETE 264
+#define FROM 265
+#define CREATE 266
+#define TABLE 267
+#define WHERE 268
+#define STAR 269
+#define EQUALS 270
+#define COMMA 271
+#define SEMICOLON 272
+#define LPAREN 273
+#define RPAREN 274
+#define IDENTIFIER 275
+#define NUMBER 276
+#define STRING 277
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 11 "parser.y"
+#line 23 "1.y"
 
-    int val;
+    char *str;
 
-#line 159 "y.tab.c"
+#line 193 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -178,23 +212,44 @@ enum yysymbol_kind_t
   YYSYMBOL_YYEOF = 0,                      /* "end of file"  */
   YYSYMBOL_YYerror = 1,                    /* error  */
   YYSYMBOL_YYUNDEF = 2,                    /* "invalid token"  */
-  YYSYMBOL_NUMBER = 3,                     /* NUMBER  */
-  YYSYMBOL_PLUS = 4,                       /* PLUS  */
-  YYSYMBOL_MINUS = 5,                      /* MINUS  */
-  YYSYMBOL_MULTIPLY = 6,                   /* MULTIPLY  */
-  YYSYMBOL_DIVIDE = 7,                     /* DIVIDE  */
-  YYSYMBOL_LPAREN = 8,                     /* LPAREN  */
-  YYSYMBOL_RPAREN = 9,                     /* RPAREN  */
-  YYSYMBOL_END = 10,                       /* END  */
-  YYSYMBOL_ID = 11,                        /* ID  */
-  YYSYMBOL_YYACCEPT = 12,                  /* $accept  */
-  YYSYMBOL_input = 13,                     /* input  */
-  YYSYMBOL_expr = 14,                      /* expr  */
-  YYSYMBOL_term = 15,                      /* term  */
-  YYSYMBOL_factor = 16,                    /* factor  */
-  YYSYMBOL_grammar_expr = 17,              /* grammar_expr  */
-  YYSYMBOL_grammar_term = 18,              /* grammar_term  */
-  YYSYMBOL_grammar_factor = 19             /* grammar_factor  */
+  YYSYMBOL_SELECT = 3,                     /* SELECT  */
+  YYSYMBOL_INSERT = 4,                     /* INSERT  */
+  YYSYMBOL_INTO = 5,                       /* INTO  */
+  YYSYMBOL_VALUES = 6,                     /* VALUES  */
+  YYSYMBOL_UPDATE = 7,                     /* UPDATE  */
+  YYSYMBOL_SET = 8,                        /* SET  */
+  YYSYMBOL_DELETE = 9,                     /* DELETE  */
+  YYSYMBOL_FROM = 10,                      /* FROM  */
+  YYSYMBOL_CREATE = 11,                    /* CREATE  */
+  YYSYMBOL_TABLE = 12,                     /* TABLE  */
+  YYSYMBOL_WHERE = 13,                     /* WHERE  */
+  YYSYMBOL_STAR = 14,                      /* STAR  */
+  YYSYMBOL_EQUALS = 15,                    /* EQUALS  */
+  YYSYMBOL_COMMA = 16,                     /* COMMA  */
+  YYSYMBOL_SEMICOLON = 17,                 /* SEMICOLON  */
+  YYSYMBOL_LPAREN = 18,                    /* LPAREN  */
+  YYSYMBOL_RPAREN = 19,                    /* RPAREN  */
+  YYSYMBOL_IDENTIFIER = 20,                /* IDENTIFIER  */
+  YYSYMBOL_NUMBER = 21,                    /* NUMBER  */
+  YYSYMBOL_STRING = 22,                    /* STRING  */
+  YYSYMBOL_YYACCEPT = 23,                  /* $accept  */
+  YYSYMBOL_query = 24,                     /* query  */
+  YYSYMBOL_select_statement = 25,          /* select_statement  */
+  YYSYMBOL_columns = 26,                   /* columns  */
+  YYSYMBOL_column_list = 27,               /* column_list  */
+  YYSYMBOL_table = 28,                     /* table  */
+  YYSYMBOL_where_clause = 29,              /* where_clause  */
+  YYSYMBOL_literal = 30,                   /* literal  */
+  YYSYMBOL_condition = 31,                 /* condition  */
+  YYSYMBOL_insert_statement = 32,          /* insert_statement  */
+  YYSYMBOL_value_list = 33,                /* value_list  */
+  YYSYMBOL_update_statement = 34,          /* update_statement  */
+  YYSYMBOL_assignments = 35,               /* assignments  */
+  YYSYMBOL_assignment = 36,                /* assignment  */
+  YYSYMBOL_delete_statement = 37,          /* delete_statement  */
+  YYSYMBOL_create_table_statement = 38,    /* create_table_statement  */
+  YYSYMBOL_column_defs = 39,               /* column_defs  */
+  YYSYMBOL_column_def = 40                 /* column_def  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -520,21 +575,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  16
+#define YYFINAL  21
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   40
+#define YYLAST   60
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  12
+#define YYNTOKENS  23
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  8
+#define YYNNTS  18
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  20
+#define YYNRULES  30
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  38
+#define YYNSTATES  74
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   266
+#define YYMAXUTOK   277
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -574,16 +629,18 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9,    10,    11
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
+      15,    16,    17,    18,    19,    20,    21,    22
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    25,    25,    26,    29,    30,    31,    34,    35,    36,
-      47,    48,    49,    54,    55,    56,    60,    61,    62,    66,
-      67
+       0,    33,    33,    34,    43,    44,    45,    49,    51,    52,
+      55,    58,    63,    65,    66,    69,    69,    71,    73,    76,
+      79,    82,    87,    89,    90,    93,    95,    97,    99,   100,
+     103
 };
 #endif
 
@@ -599,10 +656,14 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "\"end of file\"", "error", "\"invalid token\"", "NUMBER", "PLUS",
-  "MINUS", "MULTIPLY", "DIVIDE", "LPAREN", "RPAREN", "END", "ID",
-  "$accept", "input", "expr", "term", "factor", "grammar_expr",
-  "grammar_term", "grammar_factor", YY_NULLPTR
+  "\"end of file\"", "error", "\"invalid token\"", "SELECT", "INSERT",
+  "INTO", "VALUES", "UPDATE", "SET", "DELETE", "FROM", "CREATE", "TABLE",
+  "WHERE", "STAR", "EQUALS", "COMMA", "SEMICOLON", "LPAREN", "RPAREN",
+  "IDENTIFIER", "NUMBER", "STRING", "$accept", "query", "select_statement",
+  "columns", "column_list", "table", "where_clause", "literal",
+  "condition", "insert_statement", "value_list", "update_statement",
+  "assignments", "assignment", "delete_statement",
+  "create_table_statement", "column_defs", "column_def", YY_NULLPTR
 };
 
 static const char *
@@ -612,7 +673,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-3)
+#define YYPACT_NINF (-47)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -626,10 +687,14 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -1,    -3,    12,    -1,    -3,     3,     1,    23,    -3,     4,
-      25,    -3,    12,    -3,    17,    19,    -3,    12,    12,    -3,
-      12,    12,     5,     5,    -3,     5,     5,    -3,    -3,    23,
-      23,    -3,    -3,     5,    25,    25,    -3,    -3
+       1,    -3,    11,   -11,    18,    20,    33,    17,    19,    21,
+      22,    23,   -47,   -47,    25,    26,   -11,   -47,    29,   -11,
+      24,   -47,   -47,   -47,   -47,   -47,   -47,   -11,    27,    -5,
+      28,    30,    31,    30,   -47,    32,    34,    36,     5,   -47,
+      35,   -47,    37,   -47,     9,     4,     9,    28,   -47,    38,
+     -47,    39,     6,   -47,   -47,   -47,   -47,     8,    40,   -47,
+     -47,     9,   -47,    37,   -47,     9,   -47,    42,   -47,   -47,
+     -47,     9,    10,   -47
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -637,22 +702,28 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,    10,     0,     0,    19,     0,     0,     4,     7,     0,
-      13,    16,     0,    11,     0,     0,     1,     0,     0,     2,
-       0,     0,     0,     0,     3,     0,     0,    12,    20,     5,
-       6,     8,     9,     0,    14,    15,    17,    18
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     8,    10,     0,     9,     0,    12,     0,     0,
+       0,     1,     2,     3,     4,     5,     6,     0,     0,     0,
+       0,    13,     0,    13,    11,     0,     0,     0,    13,    23,
+       0,    26,     0,     7,     0,     0,     0,     0,    22,     0,
+      14,     0,     0,    28,    15,    16,    20,     0,     0,    25,
+      24,     0,    30,     0,    27,     0,    18,     0,    17,    29,
+      21,     0,     0,    19
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -3,    -3,    27,    16,    -2,    37,    13,    14
+     -47,   -47,   -47,   -47,    16,   -13,   -31,   -46,   -47,   -47,
+     -30,   -47,   -47,    -2,   -47,   -47,   -47,    -7
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     5,    14,     7,     8,    15,    10,    11
+       0,     6,     7,    14,    15,    18,    41,    56,    50,     8,
+      57,     9,    38,    39,    10,    11,    52,    53
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -660,46 +731,56 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      13,     0,     1,    16,     2,    17,    18,     3,    22,    23,
-       4,    19,     0,    33,    24,     1,     4,     2,    31,    32,
-      12,    17,    18,    22,    23,     0,    27,     6,    28,    20,
-      21,    25,    26,    29,    30,    34,    35,     9,     0,    36,
-      37
+      59,    35,    43,    29,     1,     2,    31,    48,     3,    17,
+       4,    12,     5,    36,    33,    68,    16,    13,    40,    70,
+      28,    47,    63,    58,    65,    64,    65,    66,    19,    73,
+      54,    55,    20,    21,    22,    27,    23,    30,    24,    25,
+      26,    72,    28,    40,    32,    60,    67,    34,    37,    42,
+      44,    46,    45,    61,    13,    49,    69,    51,     0,    62,
+      71
 };
 
 static const yytype_int8 yycheck[] =
 {
-       2,    -1,     3,     0,     5,     4,     5,     8,     4,     5,
-      11,    10,    -1,     8,    10,     3,    11,     5,    20,    21,
-       8,     4,     5,     4,     5,    -1,     9,     0,     9,     6,
-       7,     6,     7,    17,    18,    22,    23,     0,    -1,    25,
-      26
+      46,     6,    33,    16,     3,     4,    19,    38,     7,    20,
+       9,    14,    11,    18,    27,    61,     5,    20,    13,    65,
+      16,    16,    16,    19,    16,    19,    16,    19,    10,    19,
+      21,    22,    12,     0,    17,    10,    17,     8,    17,    17,
+      17,    71,    16,    13,    20,    47,     6,    20,    20,    18,
+      18,    15,    36,    15,    20,    20,    63,    20,    -1,    20,
+      18
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     3,     5,     8,    11,    13,    14,    15,    16,    17,
-      18,    19,     8,    16,    14,    17,     0,     4,     5,    10,
-       6,     7,     4,     5,    10,     6,     7,     9,     9,    15,
-      15,    16,    16,     8,    18,    18,    19,    19
+       0,     3,     4,     7,     9,    11,    24,    25,    32,    34,
+      37,    38,    14,    20,    26,    27,     5,    20,    28,    10,
+      12,     0,    17,    17,    17,    17,    17,    10,    16,    28,
+       8,    28,    20,    28,    20,     6,    18,    20,    35,    36,
+      13,    29,    18,    29,    18,    27,    15,    16,    29,    20,
+      31,    20,    39,    40,    21,    22,    30,    33,    19,    30,
+      36,    15,    20,    16,    19,    16,    19,     6,    30,    40,
+      30,    18,    33,    19
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    12,    13,    13,    14,    14,    14,    15,    15,    15,
-      16,    16,    16,    17,    17,    17,    18,    18,    18,    19,
-      19
+       0,    23,    24,    24,    24,    24,    24,    25,    26,    26,
+      27,    27,    28,    29,    29,    30,    30,    31,    32,    32,
+      33,    33,    34,    35,    35,    36,    37,    38,    39,    39,
+      40
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     2,     2,     1,     3,     3,     1,     3,     3,
-       1,     2,     3,     1,     3,     3,     1,     3,     3,     1,
-       3
+       0,     2,     2,     2,     2,     2,     2,     5,     1,     1,
+       1,     3,     1,     0,     2,     1,     1,     3,     7,    10,
+       1,     3,     5,     1,     3,     3,     4,     6,     1,     3,
+       2
 };
 
 
@@ -1162,111 +1243,86 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 2: /* input: expr END  */
-#line 25 "parser.y"
-             { printf("Valid and result: %d\n", (yyvsp[-1].val)); }
-#line 1169 "y.tab.c"
+  case 2: /* query: select_statement SEMICOLON  */
+#line 33 "1.y"
+                                  { printf("Valid SELECT query.\n"); }
+#line 1250 "y.tab.c"
     break;
 
-  case 3: /* input: grammar_expr END  */
-#line 26 "parser.y"
-                       { printf("Valid grammar expression.\n"); }
-#line 1175 "y.tab.c"
-    break;
-
-  case 4: /* expr: term  */
-#line 29 "parser.y"
-                         { (yyval.val) = (yyvsp[0].val); }
-#line 1181 "y.tab.c"
-    break;
-
-  case 5: /* expr: expr PLUS term  */
-#line 30 "parser.y"
-                         { printf("Reduce: %d + %d = %d\n", (yyvsp[-2].val), (yyvsp[0].val), (yyvsp[-2].val) + (yyvsp[0].val)); (yyval.val) = (yyvsp[-2].val) + (yyvsp[0].val); }
-#line 1187 "y.tab.c"
-    break;
-
-  case 6: /* expr: expr MINUS term  */
-#line 31 "parser.y"
-                         { printf("Reduce: %d - %d = %d\n", (yyvsp[-2].val), (yyvsp[0].val), (yyvsp[-2].val) - (yyvsp[0].val)); (yyval.val) = (yyvsp[-2].val) - (yyvsp[0].val); }
-#line 1193 "y.tab.c"
-    break;
-
-  case 8: /* term: term MULTIPLY factor  */
-#line 35 "parser.y"
-                           { printf("Reduce: %d * %d = %d\n", (yyvsp[-2].val), (yyvsp[0].val), (yyvsp[-2].val) * (yyvsp[0].val)); (yyval.val) = (yyvsp[-2].val) * (yyvsp[0].val); }
-#line 1199 "y.tab.c"
-    break;
-
-  case 9: /* term: term DIVIDE factor  */
-#line 37 "parser.y"
-        {
-            if ((yyvsp[0].val) == 0) {
-                printf("Error: Division by zero\n");
-                exit(1);
-            }
-            printf("Reduce: %d / %d = %d\n", (yyvsp[-2].val), (yyvsp[0].val), (yyvsp[-2].val) / (yyvsp[0].val));
-            (yyval.val) = (yyvsp[-2].val) / (yyvsp[0].val);
+  case 3: /* query: insert_statement SEMICOLON  */
+#line 34 "1.y"
+                                 {
+        if (column_count != -1 && column_count != value_count) {
+            yyerror("Number of columns and values do not match");
+        } else {
+            printf("Valid INSERT query.\n");
         }
-#line 1212 "y.tab.c"
+        column_count = 0;
+        value_count = 0;
+    }
+#line 1264 "y.tab.c"
     break;
 
-  case 10: /* factor: NUMBER  */
-#line 47 "parser.y"
-                     { (yyval.val) = (yyvsp[0].val); }
-#line 1218 "y.tab.c"
-    break;
-
-  case 11: /* factor: MINUS factor  */
-#line 48 "parser.y"
-                     { printf("Reduce: Unary -%d\n", (yyvsp[0].val)); (yyval.val) = -(yyvsp[0].val); }
-#line 1224 "y.tab.c"
-    break;
-
-  case 12: /* factor: LPAREN expr RPAREN  */
-#line 49 "parser.y"
-                           { (yyval.val) = (yyvsp[-1].val); }
-#line 1230 "y.tab.c"
-    break;
-
-  case 14: /* grammar_expr: grammar_expr PLUS grammar_term  */
-#line 55 "parser.y"
-                                     { printf("Reduce: ID + ID\n"); }
-#line 1236 "y.tab.c"
-    break;
-
-  case 15: /* grammar_expr: grammar_expr MINUS grammar_term  */
-#line 56 "parser.y"
-                                      { printf("Reduce: ID - ID\n"); }
-#line 1242 "y.tab.c"
-    break;
-
-  case 17: /* grammar_term: grammar_term MULTIPLY grammar_factor  */
-#line 61 "parser.y"
-                                           { printf("Reduce: ID * ID\n"); }
-#line 1248 "y.tab.c"
-    break;
-
-  case 18: /* grammar_term: grammar_term DIVIDE grammar_factor  */
-#line 62 "parser.y"
-                                         { printf("Reduce: ID / ID\n"); }
-#line 1254 "y.tab.c"
-    break;
-
-  case 19: /* grammar_factor: ID  */
-#line 66 "parser.y"
-       { printf("Reduce: ID\n"); }
-#line 1260 "y.tab.c"
-    break;
-
-  case 20: /* grammar_factor: LPAREN grammar_expr RPAREN  */
-#line 67 "parser.y"
-                                 { printf("Reduce: ( ID )\n"); }
-#line 1266 "y.tab.c"
-    break;
-
-
+  case 4: /* query: update_statement SEMICOLON  */
+#line 43 "1.y"
+                                 { printf("Valid UPDATE query.\n"); }
 #line 1270 "y.tab.c"
+    break;
+
+  case 5: /* query: delete_statement SEMICOLON  */
+#line 44 "1.y"
+                                 { printf("Valid DELETE query.\n"); }
+#line 1276 "y.tab.c"
+    break;
+
+  case 6: /* query: create_table_statement SEMICOLON  */
+#line 45 "1.y"
+                                       { printf("Valid CREATE TABLE query.\n"); }
+#line 1282 "y.tab.c"
+    break;
+
+  case 10: /* column_list: IDENTIFIER  */
+#line 55 "1.y"
+                        {
+    column_count = 1;
+}
+#line 1290 "y.tab.c"
+    break;
+
+  case 11: /* column_list: column_list COMMA IDENTIFIER  */
+#line 58 "1.y"
+                               {
+    column_count++;
+}
+#line 1298 "y.tab.c"
+    break;
+
+  case 18: /* insert_statement: INSERT INTO table VALUES LPAREN value_list RPAREN  */
+#line 73 "1.y"
+                                                                    {
+        column_count = -1;
+    }
+#line 1306 "y.tab.c"
+    break;
+
+  case 20: /* value_list: literal  */
+#line 79 "1.y"
+                    {
+    value_count = 1;
+}
+#line 1314 "y.tab.c"
+    break;
+
+  case 21: /* value_list: value_list COMMA literal  */
+#line 82 "1.y"
+                           {
+    value_count++;
+}
+#line 1322 "y.tab.c"
+    break;
+
+
+#line 1326 "y.tab.c"
 
       default: break;
     }
@@ -1459,16 +1515,10 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 70 "parser.y"
+#line 105 "1.y"
 
-
-
-int main() {
-    printf("Enter an arithmetic expression: ");
+int main()
+{
     yyparse();
     return 0;
 }
-
-void yyerror(const char *s) {
-    fprintf(stderr, "Error: %s\n", s);
-} 

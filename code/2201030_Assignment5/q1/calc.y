@@ -29,16 +29,16 @@ group:
 %%
 
 int main() {
-    printf("Enter Arithmetic Expression: ");
+    printf("Enter Parenthesis Expression: ");
     yyparse();
     if (flag == 0) {
-        printf("Entered arithmetic expression is Valid.\n");
+        printf("Entered Parenthesis expression is Valid.\n");
     }
     return 0;
 }
 
 void yyerror(const char *s) {
-    printf("Entered arithmetic expression is Invalid.\n");
+    printf("Entered Parenthesis expression is Invalid.\n");
     flag = 1;
 }
 

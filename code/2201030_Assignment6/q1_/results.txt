@@ -1,0 +1,87 @@
+Test case: SELECT * FROM employees;
+Result: Valid SELECT query.
+--------------------------
+Test case: SELECT name, age FROM employees WHERE age = 30;
+Result: Valid SELECT query.
+--------------------------
+Test case: SELECT id FROM employees;
+Result: Valid SELECT query.
+--------------------------
+Test case: SELECT * FROM;
+Result: 
+--------------------------
+Test case: SELECT name, age FROM employees WHERE age =;
+Result: 
+--------------------------
+Test case: SELECT * FROM employees WHERE;
+Result: 
+--------------------------
+Test case: INSERT INTO employees VALUES (101, 'John', 30);
+Result: Valid INSERT query.
+--------------------------
+Test case: INSERT INTO employees (id, name, age) VALUES (101, 'John', 30);
+Result: Valid INSERT query.
+--------------------------
+Test case: INSERT INTO employees VALUES (101, 'John');
+Result: Valid INSERT query.
+--------------------------
+Test case: INSERT INTO employees (id, name) VALUES (101);
+Result: 
+--------------------------
+Test case: INSERT INTO employees VALUES (101, 'John', 30;
+Result: 
+--------------------------
+Test case: UPDATE employees SET age = 31 WHERE id = 101;
+Result: Valid UPDATE query.
+--------------------------
+Test case: UPDATE employees SET name = 'Jane', age = 32 WHERE id = 102;
+Result: Valid UPDATE query.
+--------------------------
+Test case: UPDATE employees SET age = WHERE id = 101;
+Result: 
+--------------------------
+Test case: UPDATE employees SET = 31 WHERE id = 101;
+Result: 
+--------------------------
+Test case: UPDATE employees SET age = 31 WHERE;
+Result: 
+--------------------------
+Test case: DELETE FROM employees WHERE id = 101;
+Result: Valid DELETE query.
+--------------------------
+Test case: DELETE FROM employees;
+Result: Valid DELETE query.
+--------------------------
+Test case: DELETE FROM employees WHERE;
+Result: 
+--------------------------
+Test case: DELETE FROM;
+Result: 
+--------------------------
+Test case: CREATE TABLE employees (id INT, name VARCHAR, age INT);
+Result: Valid CREATE TABLE query.
+--------------------------
+Test case: CREATE TABLE students (id INT, name VARCHAR);
+Result: Valid CREATE TABLE query.
+--------------------------
+Test case: CREATE TABLE employees (id INT, name VARCHAR,);
+Result: 
+--------------------------
+Test case: CREATE TABLE (id INT, name VARCHAR);
+Result: 
+--------------------------
+Test case: CREATE TABLE employees;
+Result: 
+--------------------------
+Test case: ;
+Result: 
+--------------------------
+Test case: SELECT * FROM employees WHERE age = @30;
+Result: Invalid character: @
+--------------------------
+Test case: SELECT * FROM employees
+Result: 
+--------------------------
+Test case: SeLeCt * FrOm EmPlOyEeS;
+Result: 
+--------------------------

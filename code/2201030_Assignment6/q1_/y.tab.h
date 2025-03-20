@@ -54,15 +54,26 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    NUMBER = 258,                  /* NUMBER  */
-    PLUS = 259,                    /* PLUS  */
-    MINUS = 260,                   /* MINUS  */
-    MULTIPLY = 261,                /* MULTIPLY  */
-    DIVIDE = 262,                  /* DIVIDE  */
-    LPAREN = 263,                  /* LPAREN  */
-    RPAREN = 264,                  /* RPAREN  */
-    END = 265,                     /* END  */
-    ID = 266                       /* ID  */
+    SELECT = 258,                  /* SELECT  */
+    INSERT = 259,                  /* INSERT  */
+    INTO = 260,                    /* INTO  */
+    VALUES = 261,                  /* VALUES  */
+    UPDATE = 262,                  /* UPDATE  */
+    SET = 263,                     /* SET  */
+    DELETE = 264,                  /* DELETE  */
+    FROM = 265,                    /* FROM  */
+    CREATE = 266,                  /* CREATE  */
+    TABLE = 267,                   /* TABLE  */
+    WHERE = 268,                   /* WHERE  */
+    STAR = 269,                    /* STAR  */
+    EQUALS = 270,                  /* EQUALS  */
+    COMMA = 271,                   /* COMMA  */
+    SEMICOLON = 272,               /* SEMICOLON  */
+    LPAREN = 273,                  /* LPAREN  */
+    RPAREN = 274,                  /* RPAREN  */
+    IDENTIFIER = 275,              /* IDENTIFIER  */
+    NUMBER = 276,                  /* NUMBER  */
+    STRING = 277                   /* STRING  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -71,25 +82,36 @@ extern int yydebug;
 #define YYEOF 0
 #define YYerror 256
 #define YYUNDEF 257
-#define NUMBER 258
-#define PLUS 259
-#define MINUS 260
-#define MULTIPLY 261
-#define DIVIDE 262
-#define LPAREN 263
-#define RPAREN 264
-#define END 265
-#define ID 266
+#define SELECT 258
+#define INSERT 259
+#define INTO 260
+#define VALUES 261
+#define UPDATE 262
+#define SET 263
+#define DELETE 264
+#define FROM 265
+#define CREATE 266
+#define TABLE 267
+#define WHERE 268
+#define STAR 269
+#define EQUALS 270
+#define COMMA 271
+#define SEMICOLON 272
+#define LPAREN 273
+#define RPAREN 274
+#define IDENTIFIER 275
+#define NUMBER 276
+#define STRING 277
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 11 "parser.y"
+#line 23 "1.y"
 
-    int val;
+    char *str;
 
-#line 93 "y.tab.h"
+#line 115 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
