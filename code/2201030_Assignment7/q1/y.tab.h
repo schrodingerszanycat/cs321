@@ -55,13 +55,12 @@ extern int yydebug;
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
     INTEGER = 258,                 /* INTEGER  */
-    IDENTIFIER = 259,              /* IDENTIFIER  */
-    IF = 260,                      /* IF  */
-    ELSE = 261,                    /* ELSE  */
-    WHILE = 262,                   /* WHILE  */
-    ASSIGN = 263,                  /* ASSIGN  */
-    END_OF_FILE = 264,             /* END_OF_FILE  */
-    UMINUS = 265                   /* UMINUS  */
+    ADD = 259,                     /* ADD  */
+    SUBTRACT = 260,                /* SUBTRACT  */
+    MULTIPLY = 261,                /* MULTIPLY  */
+    DIVIDE = 262,                  /* DIVIDE  */
+    OPEN_PAREN = 263,              /* OPEN_PAREN  */
+    CLOSE_PAREN = 264              /* CLOSE_PAREN  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -71,25 +70,23 @@ extern int yydebug;
 #define YYerror 256
 #define YYUNDEF 257
 #define INTEGER 258
-#define IDENTIFIER 259
-#define IF 260
-#define ELSE 261
-#define WHILE 262
-#define ASSIGN 263
-#define END_OF_FILE 264
-#define UMINUS 265
+#define ADD 259
+#define SUBTRACT 260
+#define MULTIPLY 261
+#define DIVIDE 262
+#define OPEN_PAREN 263
+#define CLOSE_PAREN 264
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 172 "parser.y"
+#line 42 "parser.y"
 
-    int iValue;              /* For integer constants */
-    char *sValue;            /* For identifiers */
-    struct ASTNode *nPtr;    /* For AST nodes */
+    int value;
+    struct ExprNode* node;
 
-#line 93 "y.tab.h"
+#line 90 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

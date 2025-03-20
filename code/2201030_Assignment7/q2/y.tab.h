@@ -54,13 +54,9 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    TERMINAL = 258,                /* TERMINAL  */
-    ADD = 259,                     /* ADD  */
-    MULTIPLY = 260,                /* MULTIPLY  */
-    LEFT_PAREN = 261,              /* LEFT_PAREN  */
-    RIGHT_PAREN = 262,             /* RIGHT_PAREN  */
-    END_OF_STREAM = 263,           /* END_OF_STREAM  */
-    END_OF_INPUT = 264             /* END_OF_INPUT  */
+    BIT = 258,                     /* BIT  */
+    DOT = 259,                     /* DOT  */
+    EOL = 260                      /* EOL  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -69,24 +65,24 @@ extern int yydebug;
 #define YYEOF 0
 #define YYerror 256
 #define YYUNDEF 257
-#define TERMINAL 258
-#define ADD 259
-#define MULTIPLY 260
-#define LEFT_PAREN 261
-#define RIGHT_PAREN 262
-#define END_OF_STREAM 263
-#define END_OF_INPUT 264
+#define BIT 258
+#define DOT 259
+#define EOL 260
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 127 "ll1.y"
+#line 10 "binary_parser.y"
 
-    char *string;
-    int   token_code;
+    int intval;
+    double floatval;
+    struct {
+        double value;
+        int position;
+    } fracval;
 
-#line 90 "y.tab.h"
+#line 86 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

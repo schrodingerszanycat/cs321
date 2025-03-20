@@ -73,172 +73,40 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum {
-    NODE_CONSTANT,
-    NODE_IDENTIFIER,
-    NODE_OPERATOR,
-    NODE_IF,
-    NODE_ASSIGN,
-    NODE_SEQUENCE
-} NodeType;
+enum ValueType {
+    VALUE_TYPE_INTEGER,
+    VALUE_TYPE_OPERATION
+};
 
-/* Abstract Syntax Tree node structure */
-typedef struct ASTNode {
-    NodeType type;
+enum Operator {
+    ADDITION,
+    SUBTRACTION,
+    MULTIPLICATION,
+    DIVISION
+};
+
+typedef struct ExprNode {
+    enum ValueType type;
     union {
-        int value;              /* For constants */
-        char *name;             /* For identifiers */
-        struct {
-            char op;            /* For operators: +, -, *, / */
-            struct ASTNode *left;
-            struct ASTNode *right;
-        } op;
-        struct {
-            struct ASTNode *condition;
-            struct ASTNode *thenBranch;
-            struct ASTNode *elseBranch;
-        } ifStmt;
-        struct {
-            char *id;
-            struct ASTNode *expr;
-        } assign;
-        struct {
-            struct ASTNode *first;
-            struct ASTNode *second;
-        } seq;
+        int value;          /* For INTEGER */
+        struct {            /* For OPERATION */
+            enum Operator op;
+            struct ExprNode* left;
+            struct ExprNode* right;
+        } operation;
     } data;
-} ASTNode;
+} ExprNode;
 
-ASTNode* createConstantNode(int value) {
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_CONSTANT;
-    node->data.value = value;
-    return node;
-}
+ExprNode* createInteger(int value);
+ExprNode* createOperation(enum Operator op, ExprNode* left, ExprNode* right);
+void printParseStep(char* rule, void* value);
+void printAST(ExprNode* node, int indent);
+void cleanupAST(ExprNode* node);
 
-ASTNode* createIdentifierNode(char *name) {
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_IDENTIFIER;
-    node->data.name = strdup(name);
-    return node;
-}
+int yylex(void);
+int yyerror(char* s);
 
-ASTNode* createOperatorNode(char op, ASTNode *left, ASTNode *right) {
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_OPERATOR;
-    node->data.op.op = op;
-    node->data.op.left = left;
-    node->data.op.right = right;
-    return node;
-}
-
-/* Function to create an if-statement node in our AST */
-ASTNode* createIfNode(ASTNode *condition, ASTNode *thenBranch, ASTNode *elseBranch) {
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_IF;
-    node->data.ifStmt.condition = condition;
-    node->data.ifStmt.thenBranch = thenBranch;
-    node->data.ifStmt.elseBranch = elseBranch;
-    return node;
-}
-
-ASTNode* createAssignNode(char *id, ASTNode *expr) {
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_ASSIGN;
-    node->data.assign.id = strdup(id);
-    node->data.assign.expr = expr;
-    return node;
-}
-
-ASTNode* createSequenceNode(ASTNode *first, ASTNode *second) {
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->type = NODE_SEQUENCE;
-    node->data.seq.first = first;
-    node->data.seq.second = second;
-    return node;
-}
-
-void printAST(ASTNode *node, int indent) {
-    if (node == NULL) return;
-    
-    for (int i = 0; i < indent; i++) printf("  ");
-    
-    switch (node->type) {
-        case NODE_CONSTANT:
-            printf("CONSTANT: %d\n", node->data.value);
-            break;
-        case NODE_IDENTIFIER:
-            printf("IDENTIFIER: %s\n", node->data.name);
-            break;
-        case NODE_OPERATOR:
-            printf("OPERATOR: %c\n", node->data.op.op);
-            printAST(node->data.op.left, indent + 1);
-            printAST(node->data.op.right, indent + 1);
-            break;
-        case NODE_IF:
-            printf("IF\n");
-            for (int i = 0; i < indent; i++) printf("  ");
-            printf("CONDITION:\n");
-            printAST(node->data.ifStmt.condition, indent + 1);
-            for (int i = 0; i < indent; i++) printf("  ");
-            printf("THEN:\n");
-            printAST(node->data.ifStmt.thenBranch, indent + 1);
-            if (node->data.ifStmt.elseBranch) {
-                for (int i = 0; i < indent; i++) printf("  ");
-                printf("ELSE:\n");
-                printAST(node->data.ifStmt.elseBranch, indent + 1);
-            }
-            break;
-        case NODE_ASSIGN:
-            printf("ASSIGN: %s\n", node->data.assign.id);
-            printAST(node->data.assign.expr, indent + 1);
-            break;
-        case NODE_SEQUENCE:
-            printf("SEQUENCE\n");
-            printAST(node->data.seq.first, indent + 1);
-            printAST(node->data.seq.second, indent + 1);
-            break;
-    }
-}
-
-void freeAST(ASTNode *node) {
-    if (node == NULL) return;
-    
-    switch (node->type) {
-        case NODE_CONSTANT:
-            break;
-        case NODE_IDENTIFIER:
-            free(node->data.name);
-            break;
-        case NODE_OPERATOR:
-            freeAST(node->data.op.left);
-            freeAST(node->data.op.right);
-            break;
-        case NODE_IF:
-            freeAST(node->data.ifStmt.condition);
-            freeAST(node->data.ifStmt.thenBranch);
-            if (node->data.ifStmt.elseBranch)
-                freeAST(node->data.ifStmt.elseBranch);
-            break;
-        case NODE_ASSIGN:
-            free(node->data.assign.id);
-            freeAST(node->data.assign.expr);
-            break;
-        case NODE_SEQUENCE:
-            freeAST(node->data.seq.first);
-            freeAST(node->data.seq.second);
-            break;
-    }
-    
-    free(node);
-}
-
-ASTNode *root = NULL;
-
-extern int yylex();
-void yyerror(const char *s);
-
-#line 242 "y.tab.c"
+#line 110 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -283,13 +151,12 @@ extern int yydebug;
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
     INTEGER = 258,                 /* INTEGER  */
-    IDENTIFIER = 259,              /* IDENTIFIER  */
-    IF = 260,                      /* IF  */
-    ELSE = 261,                    /* ELSE  */
-    WHILE = 262,                   /* WHILE  */
-    ASSIGN = 263,                  /* ASSIGN  */
-    END_OF_FILE = 264,             /* END_OF_FILE  */
-    UMINUS = 265                   /* UMINUS  */
+    ADD = 259,                     /* ADD  */
+    SUBTRACT = 260,                /* SUBTRACT  */
+    MULTIPLY = 261,                /* MULTIPLY  */
+    DIVIDE = 262,                  /* DIVIDE  */
+    OPEN_PAREN = 263,              /* OPEN_PAREN  */
+    CLOSE_PAREN = 264              /* CLOSE_PAREN  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -299,25 +166,23 @@ extern int yydebug;
 #define YYerror 256
 #define YYUNDEF 257
 #define INTEGER 258
-#define IDENTIFIER 259
-#define IF 260
-#define ELSE 261
-#define WHILE 262
-#define ASSIGN 263
-#define END_OF_FILE 264
-#define UMINUS 265
+#define ADD 259
+#define SUBTRACT 260
+#define MULTIPLY 261
+#define DIVIDE 262
+#define OPEN_PAREN 263
+#define CLOSE_PAREN 264
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 172 "parser.y"
+#line 42 "parser.y"
 
-    int iValue;              /* For integer constants */
-    char *sValue;            /* For identifiers */
-    struct ASTNode *nPtr;    /* For AST nodes */
+    int value;
+    struct ExprNode* node;
 
-#line 321 "y.tab.c"
+#line 186 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -341,27 +206,17 @@ enum yysymbol_kind_t
   YYSYMBOL_YYerror = 1,                    /* error  */
   YYSYMBOL_YYUNDEF = 2,                    /* "invalid token"  */
   YYSYMBOL_INTEGER = 3,                    /* INTEGER  */
-  YYSYMBOL_IDENTIFIER = 4,                 /* IDENTIFIER  */
-  YYSYMBOL_IF = 5,                         /* IF  */
-  YYSYMBOL_ELSE = 6,                       /* ELSE  */
-  YYSYMBOL_WHILE = 7,                      /* WHILE  */
-  YYSYMBOL_ASSIGN = 8,                     /* ASSIGN  */
-  YYSYMBOL_END_OF_FILE = 9,                /* END_OF_FILE  */
-  YYSYMBOL_10_ = 10,                       /* '+'  */
-  YYSYMBOL_11_ = 11,                       /* '-'  */
-  YYSYMBOL_12_ = 12,                       /* '*'  */
-  YYSYMBOL_13_ = 13,                       /* '/'  */
-  YYSYMBOL_UMINUS = 14,                    /* UMINUS  */
-  YYSYMBOL_15_ = 15,                       /* ';'  */
-  YYSYMBOL_16_ = 16,                       /* '('  */
-  YYSYMBOL_17_ = 17,                       /* ')'  */
-  YYSYMBOL_18_ = 18,                       /* '{'  */
-  YYSYMBOL_19_ = 19,                       /* '}'  */
-  YYSYMBOL_YYACCEPT = 20,                  /* $accept  */
-  YYSYMBOL_program = 21,                   /* program  */
-  YYSYMBOL_stmt_list = 22,                 /* stmt_list  */
-  YYSYMBOL_stmt = 23,                      /* stmt  */
-  YYSYMBOL_expr = 24                       /* expr  */
+  YYSYMBOL_ADD = 4,                        /* ADD  */
+  YYSYMBOL_SUBTRACT = 5,                   /* SUBTRACT  */
+  YYSYMBOL_MULTIPLY = 6,                   /* MULTIPLY  */
+  YYSYMBOL_DIVIDE = 7,                     /* DIVIDE  */
+  YYSYMBOL_OPEN_PAREN = 8,                 /* OPEN_PAREN  */
+  YYSYMBOL_CLOSE_PAREN = 9,                /* CLOSE_PAREN  */
+  YYSYMBOL_YYACCEPT = 10,                  /* $accept  */
+  YYSYMBOL_program = 11,                   /* program  */
+  YYSYMBOL_expression = 12,                /* expression  */
+  YYSYMBOL_term = 13,                      /* term  */
+  YYSYMBOL_factor = 14                     /* factor  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -687,21 +542,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  17
+#define YYFINAL  8
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   47
+#define YYLAST   14
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  20
+#define YYNTOKENS  10
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  5
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  17
+#define YYNRULES  10
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  37
+#define YYNSTATES  18
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   265
+#define YYMAXUTOK   264
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -719,15 +574,15 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      16,    17,    12,    10,     2,    11,     2,    13,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,    15,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    18,     2,    19,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -741,15 +596,15 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9,    14
+       5,     6,     7,     8,     9
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_int8 yyrline[] =
 {
-       0,   195,   195,   199,   200,   204,   205,   206,   208,   209,
-     213,   214,   215,   216,   217,   218,   219,   220
+       0,    52,    52,    59,    63,    67,    73,    77,    81,    87,
+      91
 };
 #endif
 
@@ -765,10 +620,9 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "\"end of file\"", "error", "\"invalid token\"", "INTEGER",
-  "IDENTIFIER", "IF", "ELSE", "WHILE", "ASSIGN", "END_OF_FILE", "'+'",
-  "'-'", "'*'", "'/'", "UMINUS", "';'", "'('", "')'", "'{'", "'}'",
-  "$accept", "program", "stmt_list", "stmt", "expr", YY_NULLPTR
+  "\"end of file\"", "error", "\"invalid token\"", "INTEGER", "ADD",
+  "SUBTRACT", "MULTIPLY", "DIVIDE", "OPEN_PAREN", "CLOSE_PAREN", "$accept",
+  "program", "expression", "term", "factor", YY_NULLPTR
 };
 
 static const char *
@@ -778,7 +632,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-30)
+#define YYPACT_NINF (-5)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -792,10 +646,8 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-       9,   -30,    -3,    -5,    -1,    -1,     9,    21,    17,    19,
-      34,    -1,    -1,   -30,   -30,    18,    13,   -30,   -30,     9,
-      -1,    -1,    -1,    -1,    34,    26,   -30,   -30,   -30,    11,
-      11,   -30,   -30,     9,    27,     9,   -30
+      -1,    -5,    -1,     6,     4,    -3,    -5,    -4,    -5,    -1,
+      -1,    -1,    -1,    -5,    -3,    -3,    -5,    -5
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -803,22 +655,20 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,    10,    11,     0,     0,     0,     0,     0,     0,     3,
-       9,     0,     0,    11,    17,     0,     0,     1,     2,     0,
-       0,     0,     0,     0,     5,     0,    16,     8,     4,    12,
-      13,    14,    15,     0,     6,     0,     7
+       0,     9,     0,     0,     2,     5,     8,     0,     1,     0,
+       0,     0,     0,    10,     3,     4,     6,     7
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -30,   -30,     3,   -29,    -4
+      -5,    -5,    10,     1,     2
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     7,     8,     9,    10
+       0,     3,     4,     5,     6
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -826,44 +676,36 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      14,    15,     1,    13,    34,    11,    36,    24,    25,    16,
-       4,    12,     1,     2,     3,     5,    29,    30,    31,    32,
-       4,    17,    28,    22,    23,     5,    18,     6,    20,    21,
-      22,    23,    27,    35,    19,    26,    20,    21,    22,    23,
-       0,     0,     0,    33,    20,    21,    22,    23
+       9,    10,     1,    11,    12,    13,     8,     2,     9,    10,
+      14,    15,     7,    16,    17
 };
 
 static const yytype_int8 yycheck[] =
 {
-       4,     5,     3,     4,    33,     8,    35,    11,    12,     6,
-      11,    16,     3,     4,     5,    16,    20,    21,    22,    23,
-      11,     0,    19,    12,    13,    16,     9,    18,    10,    11,
-      12,    13,    19,     6,    15,    17,    10,    11,    12,    13,
-      -1,    -1,    -1,    17,    10,    11,    12,    13
+       4,     5,     3,     6,     7,     9,     0,     8,     4,     5,
+       9,    10,     2,    11,    12
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     3,     4,     5,    11,    16,    18,    21,    22,    23,
-      24,     8,    16,     4,    24,    24,    22,     0,     9,    15,
-      10,    11,    12,    13,    24,    24,    17,    19,    22,    24,
-      24,    24,    24,    17,    23,     6,    23
+       0,     3,     8,    11,    12,    13,    14,    12,     0,     4,
+       5,     6,     7,     9,    13,    13,    14,    14
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    20,    21,    22,    22,    23,    23,    23,    23,    23,
-      24,    24,    24,    24,    24,    24,    24,    24
+       0,    10,    11,    12,    12,    12,    13,    13,    13,    14,
+      14
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     2,     1,     3,     3,     5,     7,     3,     1,
-       1,     1,     3,     3,     3,     3,     3,     2
+       0,     2,     1,     3,     3,     1,     3,     3,     1,     1,
+       3
 };
 
 
@@ -1326,104 +1168,90 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 2: /* program: stmt_list END_OF_FILE  */
-#line 195 "parser.y"
-                            { root = (yyvsp[-1].nPtr); return 0; }
-#line 1333 "y.tab.c"
+  case 2: /* program: expression  */
+#line 52 "parser.y"
+                            { 
+                              printf("\n Abstract Syntax Tree Visualization:-\n");
+                              printAST((yyvsp[0].node), 0);
+                              cleanupAST((yyvsp[0].node));
+                            }
+#line 1179 "y.tab.c"
     break;
 
-  case 3: /* stmt_list: stmt  */
-#line 199 "parser.y"
-                            { (yyval.nPtr) = (yyvsp[0].nPtr); }
-#line 1339 "y.tab.c"
+  case 3: /* expression: expression ADD term  */
+#line 59 "parser.y"
+                                    { 
+                              printParseStep("expression -> expression + term", NULL);
+                              (yyval.node) = createOperation(ADDITION, (yyvsp[-2].node), (yyvsp[0].node));
+                            }
+#line 1188 "y.tab.c"
     break;
 
-  case 4: /* stmt_list: stmt ';' stmt_list  */
-#line 200 "parser.y"
-                            { (yyval.nPtr) = createSequenceNode((yyvsp[-2].nPtr), (yyvsp[0].nPtr)); }
-#line 1345 "y.tab.c"
+  case 4: /* expression: expression SUBTRACT term  */
+#line 63 "parser.y"
+                                     { 
+                              printParseStep("expression -> expression - term", NULL);
+                              (yyval.node) = createOperation(SUBTRACTION, (yyvsp[-2].node), (yyvsp[0].node));
+                            }
+#line 1197 "y.tab.c"
     break;
 
-  case 5: /* stmt: IDENTIFIER ASSIGN expr  */
-#line 204 "parser.y"
-                            { (yyval.nPtr) = createAssignNode((yyvsp[-2].sValue), (yyvsp[0].nPtr)); free((yyvsp[-2].sValue)); }
-#line 1351 "y.tab.c"
+  case 5: /* expression: term  */
+#line 67 "parser.y"
+                            { 
+                              printParseStep("expression -> term", NULL);
+                              (yyval.node) = (yyvsp[0].node);
+                            }
+#line 1206 "y.tab.c"
     break;
 
-  case 6: /* stmt: IF '(' expr ')' stmt  */
-#line 205 "parser.y"
-                            { (yyval.nPtr) = createIfNode((yyvsp[-2].nPtr), (yyvsp[0].nPtr), NULL); }
-#line 1357 "y.tab.c"
+  case 6: /* term: term MULTIPLY factor  */
+#line 73 "parser.y"
+                               { 
+                              printParseStep("term -> term * factor", NULL);
+                              (yyval.node) = createOperation(MULTIPLICATION, (yyvsp[-2].node), (yyvsp[0].node));
+                            }
+#line 1215 "y.tab.c"
     break;
 
-  case 7: /* stmt: IF '(' expr ')' stmt ELSE stmt  */
-#line 207 "parser.y"
-                            { (yyval.nPtr) = createIfNode((yyvsp[-4].nPtr), (yyvsp[-2].nPtr), (yyvsp[0].nPtr)); }
-#line 1363 "y.tab.c"
+  case 7: /* term: term DIVIDE factor  */
+#line 77 "parser.y"
+                             { 
+                              printParseStep("term -> term / factor", NULL);
+                              (yyval.node) = createOperation(DIVISION, (yyvsp[-2].node), (yyvsp[0].node));
+                            }
+#line 1224 "y.tab.c"
     break;
 
-  case 8: /* stmt: '{' stmt_list '}'  */
-#line 208 "parser.y"
-                            { (yyval.nPtr) = (yyvsp[-1].nPtr); }
-#line 1369 "y.tab.c"
+  case 8: /* term: factor  */
+#line 81 "parser.y"
+                            { 
+                              printParseStep("term -> factor", NULL);
+                              (yyval.node) = (yyvsp[0].node);
+                            }
+#line 1233 "y.tab.c"
     break;
 
-  case 9: /* stmt: expr  */
-#line 209 "parser.y"
-                            { (yyval.nPtr) = (yyvsp[0].nPtr); }
-#line 1375 "y.tab.c"
+  case 9: /* factor: INTEGER  */
+#line 87 "parser.y"
+                            { 
+                              printParseStep("factor -> INTEGER", &(yyvsp[0].value));
+                              (yyval.node) = createInteger((yyvsp[0].value));
+                            }
+#line 1242 "y.tab.c"
     break;
 
-  case 10: /* expr: INTEGER  */
-#line 213 "parser.y"
-                            { (yyval.nPtr) = createConstantNode((yyvsp[0].iValue)); }
-#line 1381 "y.tab.c"
-    break;
-
-  case 11: /* expr: IDENTIFIER  */
-#line 214 "parser.y"
-                            { (yyval.nPtr) = createIdentifierNode((yyvsp[0].sValue)); free((yyvsp[0].sValue)); }
-#line 1387 "y.tab.c"
-    break;
-
-  case 12: /* expr: expr '+' expr  */
-#line 215 "parser.y"
-                            { (yyval.nPtr) = createOperatorNode('+', (yyvsp[-2].nPtr), (yyvsp[0].nPtr)); }
-#line 1393 "y.tab.c"
-    break;
-
-  case 13: /* expr: expr '-' expr  */
-#line 216 "parser.y"
-                            { (yyval.nPtr) = createOperatorNode('-', (yyvsp[-2].nPtr), (yyvsp[0].nPtr)); }
-#line 1399 "y.tab.c"
-    break;
-
-  case 14: /* expr: expr '*' expr  */
-#line 217 "parser.y"
-                            { (yyval.nPtr) = createOperatorNode('*', (yyvsp[-2].nPtr), (yyvsp[0].nPtr)); }
-#line 1405 "y.tab.c"
-    break;
-
-  case 15: /* expr: expr '/' expr  */
-#line 218 "parser.y"
-                            { (yyval.nPtr) = createOperatorNode('/', (yyvsp[-2].nPtr), (yyvsp[0].nPtr)); }
-#line 1411 "y.tab.c"
-    break;
-
-  case 16: /* expr: '(' expr ')'  */
-#line 219 "parser.y"
-                            { (yyval.nPtr) = (yyvsp[-1].nPtr); }
-#line 1417 "y.tab.c"
-    break;
-
-  case 17: /* expr: '-' expr  */
-#line 220 "parser.y"
-                            { (yyval.nPtr) = createOperatorNode('u', createConstantNode(0), (yyvsp[0].nPtr)); }
-#line 1423 "y.tab.c"
+  case 10: /* factor: OPEN_PAREN expression CLOSE_PAREN  */
+#line 91 "parser.y"
+                                            { 
+                              printParseStep("factor -> ( expression )", NULL);
+                              (yyval.node) = (yyvsp[-1].node);
+                            }
+#line 1251 "y.tab.c"
     break;
 
 
-#line 1427 "y.tab.c"
+#line 1255 "y.tab.c"
 
       default: break;
     }
@@ -1616,20 +1444,89 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 223 "parser.y"
+#line 97 "parser.y"
 
 
-void yyerror(const char *s) {
-    fprintf(stderr, "Parse error: %s\n", s);
-    exit(1);
+ExprNode* createInteger(int value) {
+    ExprNode* node = (ExprNode*)malloc(sizeof(ExprNode));
+    node->type = VALUE_TYPE_INTEGER;
+    node->data.value = value;
+    return node;
 }
 
-int main(void) {
+ExprNode* createOperation(enum Operator op, ExprNode* left, ExprNode* right) {
+    ExprNode* node = (ExprNode*)malloc(sizeof(ExprNode));
+    node->type = VALUE_TYPE_OPERATION;
+    node->data.operation.op = op;
+    node->data.operation.left = left;
+    node->data.operation.right = right;
+    return node;
+}
+
+void printParseStep(char* rule, void* value) {
+    static int depth = 0;
+    static int initialized = 0;
+    
+    if (!initialized) {
+        printf("Concrete Parse Tree Construction:-\n");
+        initialized = 1;
+    }
+    
+    for (int i = 0; i < depth; i++) {
+        printf("  ");
+    }
+    
+    printf("%s", rule);
+    
+    if (strstr(rule, "INTEGER") && value) {
+        printf(" (value: %d)", *(int*)value);
+    }
+    
+    printf("\n");
+    depth++;
+}
+
+void printAST(ExprNode* node, int indent) {
+    if (!node) return;
+    
+    for (int i = 0; i < indent; i++) {
+        printf("  ");
+    }
+    
+    if (node->type == VALUE_TYPE_INTEGER) {
+        printf("VALUE: %d\n", node->data.value);
+    } else if (node->type == VALUE_TYPE_OPERATION) {
+        char symbol;
+        switch (node->data.operation.op) {
+            case ADDITION: symbol = '+'; break;
+            case SUBTRACTION: symbol = '-'; break;
+            case MULTIPLICATION: symbol = '*'; break;
+            case DIVISION: symbol = '/'; break;
+        }
+        printf("OPERATION: %c\n", symbol);
+        printAST(node->data.operation.left, indent + 1);
+        printAST(node->data.operation.right, indent + 1);
+    }
+}
+
+void cleanupAST(ExprNode* node) {
+    if (!node) return;
+    
+    if (node->type == VALUE_TYPE_OPERATION) {
+        cleanupAST(node->data.operation.left);
+        cleanupAST(node->data.operation.right);
+    }
+    
+    free(node);
+}
+
+int yyerror(char* s) {
+    fprintf(stderr, "Error: %s\n", s);
+    return 0;
+}
+
+int main() {
+    printf("Enter an arithmetic expression (examples: 5+3*2, (4+2)*3, 8/2-1):\n");
     yyparse();
-    
-    printf("Abstract Syntax Tree:\n");
-    printAST(root, 0);
-    
-    freeAST(root);
     return 0;
 }
