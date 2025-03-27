@@ -44,7 +44,7 @@ def setup_database():
         # Insert sample data
         sample_data = [
             (1, 'Alice', 101, 8.5),
-            (2, 'Bob', 102, 7.8),
+            (2, 'Bob', 201, 7.8),
             (3, 'Charlie', 103, 9.2),
             (4, 'Diana', 104, 6.5),
             (5, 'Eve', 105, 8.0)

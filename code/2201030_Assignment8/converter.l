@@ -20,6 +20,7 @@ information              { return INFORMATION; }
 student(s)?              { return STUDENT; }
 whose                    { return WHOSE; }
 having                   { return HAVING; }
+with                     { return WITH; }
 name                     { yylval.str = strdup("name"); return NAME; }
 roll                     { yylval.str = strdup("roll"); return ROLL; }
 cpi                      { yylval.str = strdup("cpi"); return CPI; }
@@ -28,13 +29,23 @@ is                       { return IS; }
 to                       { return TO; }
 more[ \t]+than           { return MORE_THAN; }
 less[ \t]+than           { return LESS_THAN; }
-and                      { return AND; }
+[aA][nN][dD]             { return AND; }
 no                       { return NO; }
 update                   { return UPDATE; }
+delete                   { return DELETE; }
+ordered                  { return ORDERED; }
+by                       { return BY; }
+descending               { return DESC; }
+ascending                { return ASC; }
+\"[^"]+\"               {
+                           yylval.str = strdup(yytext + 1);
+                           yylval.str[yyleng - 2] = '\0';
+                           return STRING;
+                         }
 [0-9]+                   { yylval.num = atoi(yytext); return INTEGER; }
 \.                       { return DOT; }
 \,                       { return COMMA; }
-[ \t\n]+                 ; /* Skip whitespace */
+[ \t\n]+                 ;
 .                        { /* Ignore other characters */ }
 %%
 

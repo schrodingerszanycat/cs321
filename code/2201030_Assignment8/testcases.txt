@@ -1,0 +1,10 @@
+Please give me the roll numbers of the students.
+Please give me all the information of the students.
+Please show me the name and roll number of the students whose cpi is more than 7.
+Please update the cpi of the student having roll no 201 to 9.
+Please show me the student whose name is "Alice".
+Please show me the student whose cpi is more than 7 and less than 9.
+Please show me the student with roll number 101.
+Please delete the student with roll number 105.
+Please show me all students ordered by cpi descending.
+Please show me all students ordered by cpi ascending.
