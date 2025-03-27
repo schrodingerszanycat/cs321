@@ -8,21 +8,17 @@
 void yyerror(char *);
 int yylex(void);
 
-// Buffer for SQL query
 char sql_query[1000];
 int query_ready = 0;
 
-// Function to be called from Python
 char* get_sql_query() {
     return sql_query;
 }
 
-// Reset query status
 void reset_query_status() {
     query_ready = 0;
 }
 
-// Check if query is ready
 int is_query_ready() {
     return query_ready;
 }
@@ -59,6 +55,9 @@ select_query: PLEASE SHOW ME THE ROLL NUMBER OF THE STUDENT {
             | PLEASE SHOW ME THE NAME AND ROLL NUMBER OF THE STUDENT WHOSE CPI IS MORE_THAN INTEGER {
                 sprintf(sql_query, "SELECT name, roll FROM Student WHERE cpi > %d", $16);
             }
+            | PLEASE SHOW THE NAME AND ROLL NUMBER OF THE STUDENT WHOSE CPI IS MORE_THAN INTEGER {
+                sprintf(sql_query, "SELECT name, roll FROM Student WHERE cpi > %d", $15);
+            }
             ;
 
 update_query: PLEASE UPDATE THE CPI OF THE STUDENT HAVING ROLL NO INTEGER TO INTEGER {
@@ -72,18 +71,13 @@ void yyerror(char *s) {
     fprintf(stderr, "Error: %s\n", s);
 }
 
-// Entry point for parsing a sentence
 int parse_english(char* sentence) {
-    // Reset query status
     reset_query_status();
 
-    // Set up input for flex
     YY_BUFFER_STATE buffer = yy_scan_string(sentence);
 
-    // Parse the input
     int result = yyparse();
 
-    // Clean up
     yy_delete_buffer(buffer);
 
     return result;

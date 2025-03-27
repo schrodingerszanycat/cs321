@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 #include <string.h>
-#include "english_to_sql.tab.h"
+#include "converter.tab.h"
 
 void yyerror(char *);
 %}
