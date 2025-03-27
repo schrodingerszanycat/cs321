@@ -1,13 +1,9 @@
--- Create the student database
-CREATE DATABASE IF NOT EXISTS student_db;
-USE student_db;
-
 -- Create the Student table with required attributes
 CREATE TABLE IF NOT EXISTS Student (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100),
-  roll INT UNIQUE,
-  cpi FLOAT
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT,
+  roll INTEGER UNIQUE,
+  cpi REAL
 );
 
 -- Insert sample data for testing

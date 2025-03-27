@@ -1,11 +1,11 @@
-# Makefile for English to SQL Converter with GUI
+# Makefile for English to SQL Converter with GUI (SQLite version)
 
 CC = gcc
 LEX = flex
 YACC = bison
 CFLAGS = -g -Wall -Wextra
-MYSQL_CFLAGS = -I/usr/include/mysql
-MYSQL_LIBS = -lmysqlclient
+SQLITE_CFLAGS = -I/usr/include
+SQLITE_LIBS = -lsqlite3
 GTK_CFLAGS = $(shell pkg-config --cflags gtk+-3.0)
 GTK_LIBS = $(shell pkg-config --libs gtk+-3.0)
 
@@ -30,7 +30,7 @@ lex.yy.c: scanner.l
 
 # GUI version with database connection
 english_to_sql_gui: y_gui.tab.c lex_gui.yy.c db_connector.o gui.o
-	$(CC) $(CFLAGS) $(MYSQL_CFLAGS) $(GTK_CFLAGS) -o english_to_sql_gui gui.o y_gui.tab.c lex_gui.yy.c db_connector.o -lfl $(MYSQL_LIBS) $(GTK_LIBS)
+	$(CC) $(CFLAGS) $(SQLITE_CFLAGS) $(GTK_CFLAGS) -o english_to_sql_gui gui.o y_gui.tab.c lex_gui.yy.c db_connector.o -lfl $(SQLITE_LIBS) $(GTK_LIBS)
 
 y_gui.tab.c: parser.y
 	$(YACC) -d -o y_gui.tab.c parser.y
@@ -39,7 +39,7 @@ lex_gui.yy.c: scanner.l
 	$(LEX) -o lex_gui.yy.c scanner.l
 
 db_connector.o: db_connector.c
-	$(CC) $(CFLAGS) $(MYSQL_CFLAGS) -c db_connector.c
+	$(CC) $(CFLAGS) $(SQLITE_CFLAGS) -c db_connector.c
 
 gui.o: gui.c
 	$(CC) $(CFLAGS) $(GTK_CFLAGS) -c gui.c
