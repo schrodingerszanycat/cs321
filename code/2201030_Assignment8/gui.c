@@ -57,7 +57,7 @@ static void activate(GtkApplication* app, gpointer user_data) {
     gtk_container_add(GTK_CONTAINER(window), grid);
 
     // Create labels
-    label1 = gtk_label_new("Enter hvwevfwvfwkvfhwrvEnglish Query:");
+    label1 = gtk_label_new("Enter English Query:");
     label2 = gtk_label_new("Generated SQL:");
     label3 = gtk_label_new("Query Results:");
     

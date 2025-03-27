@@ -10,10 +10,12 @@
 // Database file path
 #define DB_PATH "student_db.sqlite"
 
+// Static variable to track row count in result_callback
+static int row_count = 0;
+
 // Callback function for SQLite query results
 static int result_callback(void *output_ptr, int num_cols, char **col_values, char **col_names) {
     char *output = (char *)output_ptr;
-    static int row_count = 0;
     int i;
     
     // First row: Print headers
@@ -56,6 +58,9 @@ char* execute_query(const char* sql_query) {
     static char output[MAX_RESULT_LEN];
     int rc;
     int is_select = 0;
+    
+    // Reset row count for new query
+    row_count = 0;
     
     // Clear the output buffer
     memset(output, 0, MAX_RESULT_LEN);

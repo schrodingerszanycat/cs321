@@ -2,256 +2,88 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include "lex.yy.h"
 
-extern int yylex();
-void yyerror(const char *s);
+void yyerror(char *);
+int yylex(void);
 
-// Declare flex buffer functions and types
-typedef struct yy_buffer_state *YY_BUFFER_STATE;
-extern YY_BUFFER_STATE yy_scan_string(const char *str);
-extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
+// Buffer for SQL query
+char sql_query[1000];
+int query_ready = 0;
 
-// Variables to build the SQL query
-char columns[1000] = "";
-char table_name[100] = "Student";  // Default table
-char where_clause[1000] = "";
-char set_clause[1000] = "";
-char update_col[100] = "";
-int has_where = 0;
-int is_update = 0;
-
-// Helper function to append to column list
-void append_column(const char *col) {
-    if (strlen(columns) > 0 && strcmp(columns, "*") != 0) {
-        strcat(columns, ", ");
-    }
-    if (strcmp(columns, "*") != 0) {
-        strcat(columns, col);
-    }
+// Function to be called from Python
+char* get_sql_query() {
+    return sql_query;
 }
 
-// Helper function to build where clause
-void build_where(const char *col, const char *op, const char *val) {
-    if (strlen(where_clause) > 0) {
-        strcat(where_clause, " AND ");
-    }
-    
-    strcat(where_clause, col);
-    strcat(where_clause, " ");
-    strcat(where_clause, op);
-    strcat(where_clause, " ");
-    strcat(where_clause, val);
+// Reset query status
+void reset_query_status() {
+    query_ready = 0;
 }
 
-// Helper to build set clause
-void build_set(const char *col, const char *val) {
-    strcpy(update_col, col);
-    sprintf(set_clause, "%s=%s", col, val);
-}
-
-void reset_query() {
-    strcpy(columns, "");
-    strcpy(where_clause, "");
-    strcpy(set_clause, "");
-    strcpy(update_col, "");
-    has_where = 0;
-    is_update = 0;
+// Check if query is ready
+int is_query_ready() {
+    return query_ready;
 }
 %}
 
 %union {
-    int intval;
-    double floatval;
-    char *strval;
+    int num;
+    char *str;
 }
 
-%token <strval> GIVE SHOW UPDATE TABLE_KEYWORD SET TO
-%token <strval> ALL INFORMATION TABLE COLUMN
-%token <strval> HAVING WHOSE WHERE
-%token <strval> COMP_OP AND OR NO
-%token <intval> NUMBER
-%token <floatval> FLOAT
-%token <strval> IDENTIFIER
-%token COMMA
+%token PLEASE SHOW ME THE OF ALL INFORMATION STUDENT WHOSE HAVING
+%token NUMBER IS TO MORE_THAN LESS_THAN AND OR NO DOT COMMA UPDATE
+
+%token <num> INTEGER
+%token <str> NAME ROLL CPI
 
 %%
 
-input: 
-    /* empty */
-    | input query
-    ;
+statement: query DOT {
+             query_ready = 1;
+         }
+         ;
 
-query:
-    select_query             { 
-        if (!is_update) {
-            printf("select %s from %s", columns, table_name);
-            if (has_where) {
-                printf(" where %s", where_clause);
+query: select_query
+     | update_query
+     ;
+
+select_query: PLEASE SHOW ME THE ROLL NUMBER OF THE STUDENT {
+                strcpy(sql_query, "SELECT roll FROM Student");
             }
-            printf("\n");
-        }
-        reset_query();
-    }
-    | update_query           {
-        printf("update table %s set %s", table_name, set_clause);
-        if (has_where) {
-            printf(" where %s", where_clause);
-        }
-        printf("\n");
-        reset_query();
-    }
-    ;
+            | PLEASE SHOW ME ALL THE INFORMATION OF THE STUDENT {
+                strcpy(sql_query, "SELECT * FROM Student");
+            }
+            | PLEASE SHOW ME THE NAME AND ROLL NUMBER OF THE STUDENT WHOSE CPI IS MORE_THAN INTEGER {
+                sprintf(sql_query, "SELECT name, roll FROM Student WHERE cpi > %d", $16);
+            }
+            ;
 
-select_query:
-    GIVE select_columns
-    | SHOW select_columns
-    ;
-
-select_columns:
-    ALL INFORMATION          { strcpy(columns, "*"); }
-    | column_list            
-    | column_list where_clause { has_where = 1; }
-    ;
-
-column_list:
-    COLUMN                   { 
-        strcpy(columns, ""); 
-        append_column($1); 
-    }
-    | column_list COMMA COLUMN {
-        append_column($3);
-    }
-    | column_list AND COLUMN {
-        append_column($3);
-    }
-    ;
-
-where_clause:
-    WHOSE condition          
-    | HAVING condition       
-    | WHERE condition        
-    ;
-
-condition:
-    COLUMN COMP_OP NUMBER    {
-        char num_str[20];
-        sprintf(num_str, "%d", $3);
-        build_where($1, $2, num_str);
-    }
-    | COLUMN COMP_OP FLOAT   {
-        char float_str[20];
-        sprintf(float_str, "%.1f", $3);
-        build_where($1, $2, float_str);
-    }
-    | COLUMN COMP_OP COLUMN  {
-        build_where($1, $2, $3);
-    }
-    | COLUMN NUMBER          {
-        char num_str[20];
-        sprintf(num_str, "%d", $2);
-        build_where($1, "=", num_str);
-    }
-    ;
-
-update_query:
-    UPDATE COLUMN TO NUMBER student_roll_condition {
-        is_update = 1;
-        char num_str[20];
-        sprintf(num_str, "%d", $4);
-        build_set($2, num_str);
-    }
-    | UPDATE COLUMN TO FLOAT student_roll_condition {
-        is_update = 1;
-        char float_str[20];
-        sprintf(float_str, "%.1f", $4);
-        build_set($2, float_str);
-    }
-    ;
-
-student_roll_condition:
-    HAVING COLUMN NO NUMBER  {
-        char num_str[20];
-        sprintf(num_str, "%d", $4);
-        build_where($2, "=", num_str);
-        has_where = 1;
-    }
-    | HAVING COLUMN NUMBER   {
-        char num_str[20];
-        sprintf(num_str, "%d", $3);
-        build_where($2, "=", num_str);
-        has_where = 1;
-    }
-    | WHOSE COLUMN NO NUMBER {
-        char num_str[20];
-        sprintf(num_str, "%d", $4);
-        build_where($2, "=", num_str);
-        has_where = 1;
-    }
-    | WHOSE COLUMN NUMBER    {
-        char num_str[20];
-        sprintf(num_str, "%d", $3);
-        build_where($2, "=", num_str);
-        has_where = 1;
-    }
-    | WHERE COLUMN NO NUMBER {
-        char num_str[20];
-        sprintf(num_str, "%d", $4);
-        build_where($2, "=", num_str);
-        has_where = 1;
-    }
-    | WHERE COLUMN NUMBER    {
-        char num_str[20];
-        sprintf(num_str, "%d", $3);
-        build_where($2, "=", num_str);
-        has_where = 1;
-    }
-    ;
+update_query: PLEASE UPDATE THE CPI OF THE STUDENT HAVING ROLL NO INTEGER TO INTEGER {
+                sprintf(sql_query, "UPDATE Student SET cpi=%d WHERE roll=%d", $13, $11);
+            }
+            ;
 
 %%
 
-void yyerror(const char *s) {
+void yyerror(char *s) {
     fprintf(stderr, "Error: %s\n", s);
 }
 
-// Rename to parser_main to avoid conflict with GUI's main function
-int parser_main() {
-    printf("English to SQL Converter\n");
-    printf("Enter your query (or 'quit' to exit): ");
-    
-    char line[1024];
-    while(fgets(line, sizeof(line), stdin)) {
-        if(strncmp(line, "quit", 4) == 0) {
-            break;
-        }
-        
-        // Add input to lex
-        YY_BUFFER_STATE buffer = yy_scan_string(line);
-        yyparse();
-        yy_delete_buffer(buffer);
-        
-        printf("\nEnter your query (or 'quit' to exit): ");
-    }
-    
-    return 0;
-}
+// Entry point for parsing a sentence
+int parse_english(char* sentence) {
+    // Reset query status
+    reset_query_status();
 
-// Add a function to parse a single string and return the generated SQL
-char* parse_english_query(const char* query) {
-    // Reset the query state before parsing
-    reset_query();
-    
-    // Parse the query
-    YY_BUFFER_STATE buffer = yy_scan_string(query);
-    yyparse();
+    // Set up input for flex
+    YY_BUFFER_STATE buffer = yy_scan_string(sentence);
+
+    // Parse the input
+    int result = yyparse();
+
+    // Clean up
     yy_delete_buffer(buffer);
-    
-    // Return the result (this is simplified - you'd need to modify to return the actual SQL)
-    static char result[1024];
-    sprintf(result, "select %s from %s", columns, table_name);
-    if (has_where) {
-        sprintf(result + strlen(result), " where %s", where_clause);
-    }
-    
+
     return result;
 }
