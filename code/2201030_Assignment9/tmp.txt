@@ -1,3 +1,118 @@
+I wrote the below code as the solution for this question.
+
+QUESTION: 1. Write a YACC/C program to generate intermediate codes (THREE
+ADDRESS code) for simple C program. Note that, your program should
+involve simple arithmetic expressions, boolean expressions, and simple
+imperative statements like assignment, if-else, while, etc.
+
+Test you program on applying C program like
+
+• GCD
+• Interest Calculation
+• Triangle area calculation
+
+CODE:
+
+lexer.l:
+
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "y.tab.h"
+
+int line_num = 1;
+%}
+
+%option noyywrap
+%option noinput
+%option nounput
+
+/* Regex for float constants (avoids matching plain integers) */
+FloatConst      ([0-9]*\.?[0-9]+([eE][+-]?[0-9]+)?)|([0-9]+[eE][+-]?[0-9]+)
+
+/* Regex for integer constants */
+IntConst        [0-9]+
+
+%%
+[ \t]                       { /* Ignore whitespace */ }
+\n                          { line_num++; }
+"/*"([^*]|\*+[^*/])*\*+"/"  { for (int i = 0; yytext[i]; i++) if (yytext[i] == '\n') line_num++; }
+"//"[^\n]*                  { /* Skip single-line comments */ }
+
+"int"                       { return INT; }
+"float"                     { return FLOAT; }
+"char"                      { return CHAR; }
+"void"                      { return VOID; }
+"if"                        { return IF; }
+"else"                      { return ELSE; }
+"while"                     { return WHILE; }
+"for"                       { return FOR; }
+"return"                    { return RETURN; }
+
+[a-zA-Z_][a-zA-Z0-9_]*     {
+                              yylval.str = strdup(yytext);
+                              return ID;
+                            }
+
+{FloatConst}    { 
+                  yylval.fval = atof(yytext); 
+                  return FLOAT_CONST; 
+                }
+
+{IntConst}      { 
+                  yylval.ival = atoi(yytext); 
+                  return INT_CONST; 
+                }
+
+\"[^\"]*\"                 {
+                              yylval.str = strdup(yytext);
+                              return STRING;
+                            }
+
+\'[^\']\'                  {
+                              yylval.str = strdup(yytext);
+                              return CHAR_CONST;
+                            }
+
+"+"                        { return PLUS; }
+"-"                        { return MINUS; }
+"*"                        { return MULT; }
+"/"                        { return DIV; }
+"%"                        { return MOD; }
+"="                        { return ASSIGN; }
+"+="                       { return PLUS_ASSIGN; }
+"-="                       { return MINUS_ASSIGN; }
+"*="                       { return MULT_ASSIGN; }
+"/="                       { return DIV_ASSIGN; }
+"%="                       { return MOD_ASSIGN; }
+"++"                       { return INC; }
+"--"                       { return DEC; }
+"=="                       { return EQ; }
+"!="                       { return NEQ; }
+">"                        { return GT; }
+"<"                        { return LT; }
+">="                       { return GTE; }
+"<="                       { return LTE; }
+"&&"                       { return AND; }
+"||"                       { return OR; }
+"!"                        { return NOT; }
+"&"                        { return ADDR; }
+"("                        { return LPAREN; }
+")"                        { return RPAREN; }
+"{"                        { return LBRACE; }
+"}"                        { return RBRACE; }
+"["                        { return LSQUARE; }
+"]"                        { return RSQUARE; }
+";"                        { return SEMI; }
+","                        { return COMMA; }
+
+.                          { printf("Lexical error on line %d: Unknown token %s\n", line_num, yytext); }
+
+%%
+
+parser.y:
+
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -320,7 +435,7 @@ iteration_statement
         emit("LABEL L%d:\n", $<ival>1);
     } expr RPAREN statement {
         // After body, go to update
-        emit("GOTO L%d\n", $<ival>2);
+        emit("GOTO L%d:\n", $<ival>2);
         
         // Update label
         emit("LABEL L%d:\n", $<ival>2);
@@ -673,5 +788,53 @@ int main(int argc, char *argv[]) {
     printf("Three Address Code:\n");
     printf("--------------------\n");
     yyparse();
+    return 0;
+}
+
+Makefile: 
+
+CC = gcc
+LEX = lex
+YACC = yacc -d
+CFLAGS = -Wall
+
+compiler: y.tab.c lex.yy.c
+	$(CC) $(CFLAGS) -o compiler y.tab.c lex.yy.c -lfl
+
+y.tab.c: parser.y
+	$(YACC) parser.y
+
+lex.yy.c: lexer.l
+	$(LEX) lexer.l
+
+clean:
+	rm -f compiler y.tab.c y.tab.h lex.yy.c
+
+test_gcd.c:
+
+/*
+ * GCD calculation program
+ */
+
+ int gcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+int main() {
+    int num1;
+    int num2;
+    int result;
+    
+    // Example input values
+    num1 = 48;
+    num2 = 18;
+    
+    result = gcd(num1, num2);
+    
     return 0;
 }

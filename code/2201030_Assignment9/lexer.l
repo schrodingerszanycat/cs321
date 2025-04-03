@@ -11,10 +11,21 @@ int line_num = 1;
 %option noinput
 %option nounput
 
+/* Regex for float constants (avoids matching plain integers) */
+FloatConst      ([0-9]*\.?[0-9]+([eE][+-]?[0-9]+)?)|([0-9]+[eE][+-]?[0-9]+)
+
+/* Regex for integer constants */
+IntConst        [0-9]+
+
 %%
-[ \t]                       { /* Ignore whitespace */ }
+[ \t\r]                     { /* Ignore whitespace */ }
 \n                          { line_num++; }
-"/*"([^*]|\*+[^*/])*\*+"/"  { for (int i = 0; yytext[i]; i++) if (yytext[i] == '\n') line_num++; }
+"/*"([^*]|"*"+[^*/])*"*"+"/"  { 
+                              /* Count newlines in comments */
+                              for (int i = 0; yytext[i]; i++) 
+                                if (yytext[i] == '\n') 
+                                  line_num++; 
+                            }
 "//"[^\n]*                  { /* Skip single-line comments */ }
 
 "int"                       { return INT; }
@@ -32,15 +43,15 @@ int line_num = 1;
                               return ID;
                             }
 
-[0-9]+\.[0-9]+             {
-                              yylval.fval = atof(yytext);
-                              return FLOAT_CONST;
-                            }
+{FloatConst}    { 
+                  yylval.fval = atof(yytext); 
+                  return FLOAT_CONST; 
+                }
 
-[0-9]+                     {
-                              yylval.ival = atoi(yytext);
-                              return INT_CONST;
-                            }
+{IntConst}      { 
+                  yylval.ival = atoi(yytext); 
+                  return INT_CONST; 
+                }
 
 \"[^\"]*\"                 {
                               yylval.str = strdup(yytext);
