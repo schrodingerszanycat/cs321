@@ -87,7 +87,3 @@ int line_num = 1;
 .                          { printf("Lexical error on line %d: Unknown token %s\n", line_num, yytext); }
 
 %%
-
-int yywrap() {
-    return 1;
-}

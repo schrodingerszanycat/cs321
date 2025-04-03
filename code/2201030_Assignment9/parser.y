@@ -76,12 +76,11 @@ ControlLabels top_control();
 %token EQ NEQ GT LT GTE LTE AND OR NOT ADDR
 %token LPAREN RPAREN LBRACE RBRACE LSQUARE RSQUARE
 %token SEMI COMMA
-%token IFX  /* Token for IF without ELSE precedence */
 
 %type <expr> expr assignment_expr logical_expr relational_expr additive_expr
 %type <expr> multiplicative_expr unary_expr postfix_expr primary_expr
 %type <expr> statement statement_list compound_statement expr_statement
-%type <expr> selection_statement iteration_statement
+%type <expr> selection_statement iteration_statement if_statement if_else_statement
 %type <str> type_specifier
 
 %left OR
@@ -93,8 +92,7 @@ ControlLabels top_control();
 %right NOT
 %right UMINUS
 %left INC DEC
-%nonassoc IFX  /* Lower precedence than ELSE */
-%nonassoc ELSE
+/* Removing the precedence declarations for IFX and ELSE */
 
 %%
 
@@ -228,7 +226,16 @@ expr_statement
     ;
 
 selection_statement
-    : IF LPAREN expr RPAREN statement %prec IFX {
+    : if_statement {
+        $$.code = $1.code;
+    }
+    | if_else_statement {
+        $$.code = $1.code;
+    }
+    ;
+
+if_statement
+    : IF LPAREN expr RPAREN statement {
         int true_label = new_label();
         int false_label = new_label();
         emit("%s", $3.code);  // Emit condition code
@@ -239,7 +246,10 @@ selection_statement
         emit("LABEL L%d:\n", false_label);
         $$.code = strdup("");
     }
-    | IF LPAREN expr RPAREN statement ELSE statement {
+    ;
+
+if_else_statement
+    : IF LPAREN expr RPAREN statement ELSE statement {
         int true_label = new_label();
         int false_label = new_label();
         int end_label = new_label();
