@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_Y_TAB_H_INCLUDED
-# define YY_YY_Y_TAB_H_INCLUDED
+#ifndef YY_YY_CONVERTER_TAB_H_INCLUDED
+# define YY_YY_CONVERTER_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -54,48 +54,52 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    NOUN = 258,                    /* NOUN  */
-    VERB = 259,                    /* VERB  */
-    ADJECTIVE = 260,               /* ADJECTIVE  */
-    ADVERB = 261,                  /* ADVERB  */
-    PREP = 262,                    /* PREP  */
-    UNKNOWN = 263,                 /* UNKNOWN  */
-    AUX = 264,                     /* AUX  */
-    ARTICLE = 265,                 /* ARTICLE  */
-    CONJ = 266,                    /* CONJ  */
-    DOT = 267,                     /* DOT  */
-    COMMA = 268,                   /* COMMA  */
-    EOL = 269                      /* EOL  */
+    PLEASE = 258,                  /* PLEASE  */
+    SHOW = 259,                    /* SHOW  */
+    ME = 260,                      /* ME  */
+    THE = 261,                     /* THE  */
+    OF = 262,                      /* OF  */
+    ALL = 263,                     /* ALL  */
+    INFORMATION = 264,             /* INFORMATION  */
+    STUDENT = 265,                 /* STUDENT  */
+    WHOSE = 266,                   /* WHOSE  */
+    HAVING = 267,                  /* HAVING  */
+    NUMBER = 268,                  /* NUMBER  */
+    IS = 269,                      /* IS  */
+    TO = 270,                      /* TO  */
+    MORE_THAN = 271,               /* MORE_THAN  */
+    LESS_THAN = 272,               /* LESS_THAN  */
+    AND = 273,                     /* AND  */
+    OR = 274,                      /* OR  */
+    NO = 275,                      /* NO  */
+    DOT = 276,                     /* DOT  */
+    COMMA = 277,                   /* COMMA  */
+    UPDATE = 278,                  /* UPDATE  */
+    DELETE = 279,                  /* DELETE  */
+    WITH = 280,                    /* WITH  */
+    ORDERED = 281,                 /* ORDERED  */
+    BY = 282,                      /* BY  */
+    DESC = 283,                    /* DESC  */
+    ASC = 284,                     /* ASC  */
+    INTEGER = 285,                 /* INTEGER  */
+    NAME = 286,                    /* NAME  */
+    ROLL = 287,                    /* ROLL  */
+    CPI = 288,                     /* CPI  */
+    STRING = 289                   /* STRING  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
-/* Token kinds.  */
-#define YYEMPTY -2
-#define YYEOF 0
-#define YYerror 256
-#define YYUNDEF 257
-#define NOUN 258
-#define VERB 259
-#define ADJECTIVE 260
-#define ADVERB 261
-#define PREP 262
-#define UNKNOWN 263
-#define AUX 264
-#define ARTICLE 265
-#define CONJ 266
-#define DOT 267
-#define COMMA 268
-#define EOL 269
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 10 "2.y"
+#line 19 "converter.y"
 
+    int num;
     char *str;
 
-#line 99 "y.tab.h"
+#line 103 "converter.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -110,4 +114,4 @@ extern YYSTYPE yylval;
 int yyparse (void);
 
 
-#endif /* !YY_YY_Y_TAB_H_INCLUDED  */
+#endif /* !YY_YY_CONVERTER_TAB_H_INCLUDED  */

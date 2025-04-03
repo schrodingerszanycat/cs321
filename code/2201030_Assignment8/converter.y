@@ -33,7 +33,7 @@ int is_query_ready() { return query_ready; }
 statement: query DOT { query_ready = 1; } ;
 
 query: select_query | update_query | delete_query ;
-
+    
 select_query:
     PLEASE SHOW ME THE ROLL NUMBER OF THE STUDENT {
         strcpy(sql_query, "SELECT roll FROM Student");
