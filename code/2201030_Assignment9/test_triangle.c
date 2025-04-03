@@ -1,19 +1,11 @@
-/*
- * Triangle Area Calculation Program
- * Calculates area using different methods
- */
-
-// Calculate area using base and height
 float calculateAreaWithBaseHeight(float base, float height) {
     float area;
     
-    // Formula: A = (1/2) * base * height
     area = 0.5 * base * height;
     
     return area;
 }
 
-// Calculate area using Heron's formula and side lengths
 float calculateAreaWithSides(float a, float b, float c) {
     float s;
     float area;
@@ -21,15 +13,11 @@ float calculateAreaWithSides(float a, float b, float c) {
     // Calculate semi-perimeter
     s = (a + b + c) / 2.0;
     
-    // Heron's formula: A = sqrt(s * (s-a) * (s-b) * (s-c))
-    // We'll approximate sqrt using a simple algorithm
     area = s * (s - a) * (s - b) * (s - c);
     
-    // Rough approximation of square root using Newton's method
     float x = area / 2.0;
     int i;
     
-    // Few iterations of Newton's method for square root
     for (i = 0; i < 5; i = i + 1) {
         x = (x + area / x) / 2.0;
     }
@@ -39,7 +27,6 @@ float calculateAreaWithSides(float a, float b, float c) {
     return area;
 }
 
-// Check if three sides can form a triangle
 int isValidTriangle(float a, float b, float c) {
     // Triangle inequality theorem
     if (a + b > c && b + c > a && a + c > b) {

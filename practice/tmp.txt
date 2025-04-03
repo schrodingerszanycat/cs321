@@ -1,6 +1,6 @@
-I wrote the below code as the solution for this question.
+I wrote the .l and .y files as the solution for this question.
 
-QUESTION: 1. Write a YACC/C program to generate intermediate codes (THREE
+QUESTION:  Write a YACC/C program to generate intermediate codes (THREE
 ADDRESS code) for simple C program. Note that, your program should
 involve simple arithmetic expressions, boolean expressions, and simple
 imperative statements like assignment, if-else, while, etc.
@@ -11,10 +11,11 @@ Test you program on applying C program like
 • Interest Calculation
 • Triangle area calculation
 
+Check whether my code gives the correct output for the C codes. If it does not, change, modify or maybe re-write the code, so that correct 3 address code is generated.
+
 CODE:
 
 lexer.l:
-
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,9 +36,14 @@ FloatConst      ([0-9]*\.?[0-9]+([eE][+-]?[0-9]+)?)|([0-9]+[eE][+-]?[0-9]+)
 IntConst        [0-9]+
 
 %%
-[ \t]                       { /* Ignore whitespace */ }
+[ \t\r]                     { /* Ignore whitespace */ }
 \n                          { line_num++; }
-"/*"([^*]|\*+[^*/])*\*+"/"  { for (int i = 0; yytext[i]; i++) if (yytext[i] == '\n') line_num++; }
+"/*"([^*]|"*"+[^*/])*"*"+"/"  { 
+                              /* Count newlines in comments */
+                              for (int i = 0; yytext[i]; i++) 
+                                if (yytext[i] == '\n') 
+                                  line_num++; 
+                            }
 "//"[^\n]*                  { /* Skip single-line comments */ }
 
 "int"                       { return INT; }
@@ -111,8 +117,8 @@ IntConst        [0-9]+
 
 %%
 
-parser.y:
 
+parser.y:
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -389,63 +395,64 @@ if_else_statement
     ;
 
 iteration_statement
-    : WHILE {
-        int start_label = new_label(); 
-        emit("LABEL L%d:\n", start_label);
-        $<ival>$ = start_label;
-    } LPAREN expr RPAREN statement {
-        int true_label = new_label();
-        int end_label = new_label();
+    : WHILE LPAREN expr RPAREN statement {
+        int loop_start = new_label();
+        int loop_body = new_label();
+        int loop_end = new_label();
         
-        // Emit condition code
-        emit("%s", $4.code);
-        emit("IF %s GOTO L%d\n", $4.place, true_label);
-        emit("GOTO L%d\n", end_label);
+        // Start of loop with condition
+        emit("LABEL L%d:\n", loop_start);
         
-        emit("LABEL L%d:\n", true_label);
-        emit("%s", $6.code);
-        emit("GOTO L%d\n", $<ival>1);
-        emit("LABEL L%d:\n", end_label);
+        // Condition evaluation
+        emit("%s", $3.code);
+        emit("IF %s GOTO L%d\n", $3.place, loop_body);
+        emit("GOTO L%d\n", loop_end);
+        
+        // Loop body
+        emit("LABEL L%d:\n", loop_body);
+        emit("%s", $5.code);
+        
+        // Jump back to condition
+        emit("GOTO L%d\n", loop_start);
+        
+        // Loop exit
+        emit("LABEL L%d:\n", loop_end);
+        
         $$.code = strdup("");
     }
-    | FOR LPAREN expr_statement {
-        // Initialize labels
+    | FOR LPAREN expr_statement expr SEMI expr RPAREN statement {
+        int init_label = new_label();
         int cond_label = new_label();
         int body_label = new_label();
         int update_label = new_label();
         int end_label = new_label();
         
-        // Execute initialization
-        emit("%s", $3.code);
+        // Structure:
+        // init_label:
+        //    <initialization>
+        // cond_label:
+        //    if condition goto body_label
+        //    goto end_label
+        // body_label:
+        //    <statement body>
+        // update_label:
+        //    <update expression>
+        //    goto cond_label
+        // end_label:
         
-        // Jump to condition
+        emit("LABEL L%d:\n", init_label);
+        emit("%s", $3.code);                            // Initialization
         emit("LABEL L%d:\n", cond_label);
+        emit("%s", $4.code);                            // Condition
+        emit("IF %s GOTO L%d\n", $4.place, body_label);
+        emit("GOTO L%d\n", end_label);
+        emit("LABEL L%d:\n", body_label);
+        emit("%s", $8.code);                            // Body
+        emit("LABEL L%d:\n", update_label);
+        emit("%s", $6.code);                            // Update
+        emit("GOTO L%d\n", cond_label);
+        emit("LABEL L%d:\n", end_label);
         
-        // Save labels for later use
-        $<ival>$ = cond_label;
-        $<ival>1 = body_label;
-        $<ival>2 = update_label;
-        $<ival>3 = end_label;
-    } expr SEMI {
-        // If condition is true, go to body, else exit loop
-        emit("IF %s GOTO L%d\n", $5.place, $<ival>1);
-        emit("GOTO L%d\n", $<ival>3);
-        
-        // Body label
-        emit("LABEL L%d:\n", $<ival>1);
-    } expr RPAREN statement {
-        // After body, go to update
-        emit("GOTO L%d:\n", $<ival>2);
-        
-        // Update label
-        emit("LABEL L%d:\n", $<ival>2);
-        emit("%s", $8.code);
-        
-        // Go back to condition
-        emit("GOTO L%d\n", $<ival>4);
-        
-        // End label
-        emit("LABEL L%d:\n", $<ival>3);
         $$.code = strdup("");
     }
     ;
@@ -810,31 +817,3 @@ lex.yy.c: lexer.l
 clean:
 	rm -f compiler y.tab.c y.tab.h lex.yy.c
 
-test_gcd.c:
-
-/*
- * GCD calculation program
- */
-
- int gcd(int a, int b) {
-    while (b != 0) {
-        int temp = b;
-        b = a % b;
-        a = temp;
-    }
-    return a;
-}
-
-int main() {
-    int num1;
-    int num2;
-    int result;
-    
-    // Example input values
-    num1 = 48;
-    num2 = 18;
-    
-    result = gcd(num1, num2);
-    
-    return 0;
-}

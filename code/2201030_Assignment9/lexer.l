@@ -11,10 +11,8 @@ int line_num = 1;
 %option noinput
 %option nounput
 
-/* Regex for float constants (avoids matching plain integers) */
 FloatConst      ([0-9]*\.?[0-9]+([eE][+-]?[0-9]+)?)|([0-9]+[eE][+-]?[0-9]+)
 
-/* Regex for integer constants */
 IntConst        [0-9]+
 
 %%
@@ -43,15 +41,15 @@ IntConst        [0-9]+
                               return ID;
                             }
 
-{FloatConst}    { 
-                  yylval.fval = atof(yytext); 
-                  return FLOAT_CONST; 
-                }
+{FloatConst}               { 
+                            yylval.fval = atof(yytext); 
+                            return FLOAT_CONST; 
+                            }
 
-{IntConst}      { 
-                  yylval.ival = atoi(yytext); 
-                  return INT_CONST; 
-                }
+{IntConst}                 { 
+                            yylval.ival = atoi(yytext); 
+                            return INT_CONST; 
+                            }
 
 \"[^\"]*\"                 {
                               yylval.str = strdup(yytext);

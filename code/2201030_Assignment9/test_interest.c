@@ -1,9 +1,4 @@
-/*
- * Interest Calculation Program
- * Calculates simple and compound interest
- */
-
- float calculateSimpleInterest(float principal, float rate, int time) {
+float calculateSimpleInterest(float principal, float rate, int time) {
     float interest;
     
     // Simple interest formula: I = P * R * T / 100

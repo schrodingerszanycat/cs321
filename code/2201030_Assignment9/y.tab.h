@@ -161,16 +161,16 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 55 "parser.y"
+#line 56 "parser.y"
 
     int ival;
     float fval;
     char *str;
     struct {
-        char *place;     // Variable holding the value
+        char *place;     
         int true_label;  // Label for true branch (for boolean expressions)
-        int false_label; // Label for false branch (for boolean expressions)
-        char *code;      // Accumulated code
+        int false_label; // Label for false branch 
+        char *code;      
     } expr;
 
 #line 177 "y.tab.h"

@@ -1,0 +1,30 @@
+Three Address Code:
+--------------------
+PARAM a
+PARAM b
+FUNCTION_BEGIN gcd
+DECLARE int temp
+temp = b
+t0 = b != 0.000000
+IF t0 != 0 GOTO L1
+GOTO L2
+LABEL L1:
+t1 = a % b
+b = t1
+a = temp
+GOTO L0
+LABEL L2:
+RETURN a
+FUNCTION_END gcd
+FUNCTION_BEGIN main
+DECLARE int num1
+DECLARE int num2
+DECLARE int result
+PARAM num1
+PARAM num2
+num1 = 48.000000
+num2 = 18.000000
+t2 = call gcd
+result = t2
+RETURN 0.000000
+FUNCTION_END main

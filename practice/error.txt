@@ -1,0 +1,349 @@
+anushka164@Anushka:2201030_Assignment9$ ./compiler test_triangle.c
+
+Three Address Code:
+
+--------------------
+
+PARAM base
+
+PARAM height
+
+FUNCTION_BEGIN calculateAreaWithBaseHeight
+
+DECLARE float area
+
+t0 = 0.500000 * base
+
+t1 = t0 * height
+
+area = t1
+
+RETURN area
+
+FUNCTION_END calculateAreaWithBaseHeight
+
+PARAM a
+
+PARAM b
+
+PARAM c
+
+FUNCTION_BEGIN calculateAreaWithSides
+
+DECLARE float s
+
+DECLARE float area
+
+DECLARE float x
+
+t11 = area / 2.000000
+
+x = t11
+
+DECLARE int i
+
+t2 = a + b
+
+t3 = t2 + c
+
+t4 = t3 / 2.000000
+
+s = t4
+
+t5 = s - a
+
+t6 = s * t5
+
+t7 = s - b
+
+t8 = t6 * t7
+
+t9 = s - c
+
+t10 = t8 * t9
+
+area = t10
+
+LABEL L0:
+
+i = 0.000000
+
+LABEL L1:
+
+t12 = i < 5.000000
+
+t0 = t12 != 0
+
+IF t0 != 0 GOTO L2
+
+GOTO L4
+
+LABEL L2:
+
+t14 = area / x
+
+t15 = x + t14
+
+t16 = t15 / 2.000000
+
+x = t16
+
+LABEL L3:
+
+t13 = i + 1.000000
+
+i = t13
+
+GOTO L1
+
+LABEL L4:
+
+area = x
+
+RETURN area
+
+FUNCTION_END calculateAreaWithSides
+
+PARAM a
+
+PARAM b
+
+PARAM c
+
+FUNCTION_BEGIN isValidTriangle
+
+t17 = a + b
+
+t18 = t17 > c
+
+t19 = b + c
+
+t20 = t19 > a
+
+t21 = t18 && t20
+
+t22 = a + c
+
+t23 = t22 > b
+
+t24 = t21 && t23
+
+IF t24 GOTO L5
+
+GOTO L6
+
+LABEL L5:
+
+RETURN 1.000000
+
+GOTO L7
+
+LABEL L6:
+
+RETURN 0.000000
+
+LABEL L7:
+
+FUNCTION_END isValidTriangle
+
+FUNCTION_BEGIN main
+
+DECLARE float base
+
+DECLARE float height
+
+DECLARE float side1
+
+DECLARE float side2
+
+DECLARE float side3
+
+DECLARE float area1
+
+DECLARE float area2
+
+DECLARE int valid
+
+base = 5.000000
+
+height = 4.000000
+
+side1 = 3.000000
+
+side2 = 4.000000
+
+side3 = 5.000000
+
+PARAM base
+
+PARAM height
+
+t25 = call calculateAreaWithBaseHeight
+
+area1 = t25
+
+PARAM side1
+
+PARAM side2
+
+PARAM side3
+
+t26 = call isValidTriangle
+
+valid = t26
+
+IF valid GOTO L8
+
+GOTO L9
+
+LABEL L8:
+
+PARAM side1
+
+PARAM side2
+
+PARAM side3
+
+t27 = call calculateAreaWithSides
+
+area2 = t27
+
+LABEL L9:
+
+RETURN 0.000000
+
+FUNCTION_END main
+
+
+###########################################
+
+
+anushka164@Anushka:2201030_Assignment9$ ./compiler test_interest.c
+
+Three Address Code:
+
+--------------------
+
+PARAM principal
+
+PARAM rate
+
+PARAM time
+
+FUNCTION_BEGIN calculateSimpleInterest
+
+DECLARE float interest
+
+t0 = principal * rate
+
+t1 = t0 * time
+
+t2 = t1 / 100.000000
+
+interest = t2
+
+RETURN interest
+
+FUNCTION_END calculateSimpleInterest
+
+PARAM principal
+
+PARAM rate
+
+PARAM time
+
+FUNCTION_BEGIN calculateCompoundInterest
+
+DECLARE float amount
+
+DECLARE float interest
+
+DECLARE int i
+
+amount = principal
+
+LABEL L0:
+
+i = 0.000000
+
+LABEL L1:
+
+t3 = i < time
+
+t0 = t3 != 0
+
+IF t0 != 0 GOTO L2
+
+GOTO L4
+
+LABEL L2:
+
+t5 = amount * rate
+
+t6 = t5 / 100.000000
+
+t7 = amount + t6
+
+amount = t7
+
+LABEL L3:
+
+t4 = i + 1.000000
+
+i = t4
+
+GOTO L1
+
+LABEL L4:
+
+t8 = amount - principal
+
+interest = t8
+
+RETURN interest
+
+FUNCTION_END calculateCompoundInterest
+
+FUNCTION_BEGIN main
+
+DECLARE float principal
+
+DECLARE float rate
+
+DECLARE int time
+
+DECLARE float simpleInterest
+
+DECLARE float compoundInterest
+
+principal = 1000.000000
+
+rate = 5.000000
+
+time = 3.000000
+
+PARAM principal
+
+PARAM rate
+
+PARAM time
+
+t9 = call calculateSimpleInterest
+
+simpleInterest = t9
+
+PARAM principal
+
+PARAM rate
+
+PARAM time
+
+t10 = call calculateCompoundInterest
+
+compoundInterest = t10
+
+RETURN 0.000000
+
+FUNCTION_END main
+
+anushka164@Anushka:2201030_Assignment9$

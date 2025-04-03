@@ -50,6 +50,7 @@ void emit(char *format, ...);
 void push_control(int start, int end);
 void pop_control();
 ControlLabels top_control();
+char* concat_code(char* code1, char* code2);
 %}
 
 %union {
@@ -57,10 +58,10 @@ ControlLabels top_control();
     float fval;
     char *str;
     struct {
-        char *place;     // Variable holding the value
+        char *place;     
         int true_label;  // Label for true branch (for boolean expressions)
-        int false_label; // Label for false branch (for boolean expressions)
-        char *code;      // Accumulated code
+        int false_label; // Label for false branch 
+        char *code;      
     } expr;
 }
 
@@ -82,6 +83,7 @@ ControlLabels top_control();
 %type <expr> statement statement_list compound_statement expr_statement
 %type <expr> selection_statement iteration_statement if_statement if_else_statement
 %type <str> type_specifier
+%type <expr> argument_list argument_list_opt
 
 %right SEMI
 %left LPAREN RPAREN
@@ -96,10 +98,6 @@ ControlLabels top_control();
 %left INC DEC
 %nonassoc IFX
 %nonassoc ELSE
-
-
-
-
 
 %%
 
@@ -122,6 +120,7 @@ function_definition
       }
       compound_statement 
       { 
+        emit("%s", $7.code);
         emit("FUNCTION_END %s\n", $2);
         exit_scope(); 
       }
@@ -133,6 +132,7 @@ function_definition
       }
       compound_statement 
       { 
+        emit("%s", $6.code);  
         emit("FUNCTION_END %s\n", $2);
         exit_scope(); 
       }
@@ -171,6 +171,7 @@ declarator
     | ID ASSIGN expr {
         add_symbol($1, current_type);
         emit("DECLARE %s %s\n", current_type, $1);
+        emit("%s", $3.code);
         emit("%s = %s\n", $1, $3.place);
     }
     ;
@@ -193,8 +194,12 @@ compound_statement
     ;
 
 statement_list
-    : statement
-    | statement_list statement
+    : statement {
+        $$.code = $1.code;
+    }
+    | statement_list statement {
+        $$.code = concat_code($1.code, $2.code);
+    }
     ;
 
 statement
@@ -214,12 +219,12 @@ statement
         $$.code = strdup("");
     }
     | RETURN expr SEMI {
-        emit("RETURN %s\n", $2.place);
-        $$.code = strdup("");
+        char* temp = (char*)malloc(100 + strlen($2.code));
+        sprintf(temp, "%sRETURN %s\n", $2.code, $2.place);
+        $$.code = temp;
     }
     | RETURN SEMI {
-        emit("RETURN\n");
-        $$.code = strdup("");
+        $$.code = strdup("RETURN\n");
     }
     ;
 
@@ -245,13 +250,13 @@ if_statement
     : IF LPAREN expr RPAREN statement %prec IFX {
         int true_label = new_label();
         int false_label = new_label();
-        emit("%s", $3.code);  // Emit condition code
-        emit("IF %s GOTO L%d\n", $3.place, true_label);
-        emit("GOTO L%d\n", false_label);
-        emit("LABEL L%d:\n", true_label);
-        emit("%s", $5.code);
-        emit("LABEL L%d:\n", false_label);
-        $$.code = strdup("");
+        
+        char* code = (char*)malloc(1000);
+        sprintf(code, "%sIF %s GOTO L%d\nGOTO L%d\nLABEL L%d:\n%sLABEL L%d:\n", 
+                $3.code, $3.place, true_label, false_label, 
+                true_label, $5.code, false_label);
+        
+        $$.code = code;
     }
     ;
 
@@ -260,78 +265,47 @@ if_else_statement
         int true_label = new_label();
         int false_label = new_label();
         int end_label = new_label();
-        emit("%s", $3.code);  // Emit condition code
-        emit("IF %s GOTO L%d\n", $3.place, true_label);
-        emit("GOTO L%d\n", false_label);
-        emit("LABEL L%d:\n", true_label);
-        emit("%s", $5.code);
-        emit("GOTO L%d\n", end_label);
-        emit("LABEL L%d:\n", false_label);
-        emit("%s", $7.code);
-        emit("LABEL L%d:\n", end_label);
-        $$.code = strdup("");
+        
+        char* code = (char*)malloc(1000);
+        sprintf(code, "%sIF %s GOTO L%d\nGOTO L%d\nLABEL L%d:\n%sGOTO L%d\nLABEL L%d:\n%sLABEL L%d:\n", 
+                $3.code, $3.place, true_label, false_label, 
+                true_label, $5.code, end_label, 
+                false_label, $7.code, end_label);
+        
+        $$.code = code;
     }
     ;
 
 iteration_statement
-    : WHILE {
-        int start_label = new_label(); 
-        emit("LABEL L%d:\n", start_label);
-        $<ival>$ = start_label;
-    } LPAREN expr RPAREN statement {
-        int true_label = new_label();
-        int end_label = new_label();
+    : WHILE LPAREN expr RPAREN statement {
+        int loop_start = new_label();
+        int loop_body = new_label();
+        int loop_end = new_label();
         
-        // Emit condition code
-        emit("%s", $4.code);
-        emit("IF %s GOTO L%d\n", $4.place, true_label);
-        emit("GOTO L%d\n", end_label);
+        char* code = (char*)malloc(2000);
+        // Use consistent loop_start label
+        sprintf(code, "LABEL L%d:\n%st0 = %s != 0\nIF t0 != 0 GOTO L%d\nGOTO L%d\nLABEL L%d:\n%sGOTO L%d\nLABEL L%d:\n", 
+                loop_start, $3.code, $3.place, loop_body, loop_end, 
+                loop_body, $5.code, loop_start, loop_end);
         
-        emit("LABEL L%d:\n", true_label);
-        emit("%s", $6.code);
-        emit("GOTO L%d\n", $<ival>1);
-        emit("LABEL L%d:\n", end_label);
-        $$.code = strdup("");
+        $$.code = code;
     }
-    | FOR LPAREN expr_statement {
-        // Initialize labels
+    | FOR LPAREN expr_statement expr SEMI expr RPAREN statement {
+        int init_label = new_label();
         int cond_label = new_label();
         int body_label = new_label();
         int update_label = new_label();
         int end_label = new_label();
         
-        // Execute initialization
-        emit("%s", $3.code);
+        char* code = (char*)malloc(2000);
+        sprintf(code, "LABEL L%d:\n%sLABEL L%d:\n%st0 = %s != 0\nIF t0 != 0 GOTO L%d\nGOTO L%d\nLABEL L%d:\n%sLABEL L%d:\n%sGOTO L%d\nLABEL L%d:\n", 
+                init_label, $3.code, 
+                cond_label, $4.code, $4.place, body_label, end_label, 
+                body_label, $8.code, 
+                update_label, $6.code, cond_label, 
+                end_label);
         
-        // Jump to condition
-        emit("LABEL L%d:\n", cond_label);
-        
-        // Save labels for later use
-        $<ival>$ = cond_label;
-        $<ival>1 = body_label;
-        $<ival>2 = update_label;
-        $<ival>3 = end_label;
-    } expr SEMI {
-        // If condition is true, go to body, else exit loop
-        emit("IF %s GOTO L%d\n", $5.place, $<ival>1);
-        emit("GOTO L%d\n", $<ival>3);
-        
-        // Body label
-        emit("LABEL L%d:\n", $<ival>1);
-    } expr RPAREN statement {
-        // After body, go to update
-        emit("GOTO L%d\n", $<ival>2);
-        
-        // Update label
-        emit("LABEL L%d:\n", $<ival>2);
-        emit("%s", $8.code);
-        
-        // Go back to condition
-        emit("GOTO L%d\n", $<ival>4);
-        
-        // End label
-        emit("LABEL L%d:\n", $<ival>3);
-        $$.code = strdup("");
+        $$.code = code;
     }
     ;
 
@@ -349,43 +323,72 @@ assignment_expr
     }
     | unary_expr ASSIGN expr {
         $$.place = $1.place;
-        emit("%s = %s\n", $1.place, $3.place);
-        $$.code = $3.code;
+        char* code = concat_code($1.code, $3.code);
+        char* assign_code = (char*)malloc(100);
+        sprintf(assign_code, "%s = %s\n", $1.place, $3.place);
+        $$.code = concat_code(code, assign_code);
+        free(code);
+        free(assign_code);
     }
     | unary_expr PLUS_ASSIGN expr {
         $$.place = $1.place;
-        char *temp = new_temp();
-        emit("%s = %s + %s\n", temp, $1.place, $3.place);
-        emit("%s = %s\n", $1.place, temp);
-        $$.code = $3.code;
+        char* temp = new_temp();
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(200);
+        sprintf(op_code, "%s = %s + %s\n%s = %s\n", temp, $1.place, $3.place, $1.place, temp);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | unary_expr MINUS_ASSIGN expr {
         $$.place = $1.place;
-        char *temp = new_temp();
-        emit("%s = %s - %s\n", temp, $1.place, $3.place);
-        emit("%s = %s\n", $1.place, temp);
-        $$.code = $3.code;
+        char* temp = new_temp();
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(200);
+        sprintf(op_code, "%s = %s - %s\n%s = %s\n", temp, $1.place, $3.place, $1.place, temp);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | unary_expr MULT_ASSIGN expr {
         $$.place = $1.place;
-        char *temp = new_temp();
-        emit("%s = %s * %s\n", temp, $1.place, $3.place);
-        emit("%s = %s\n", $1.place, temp);
-        $$.code = $3.code;
+        char* temp = new_temp();
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(200);
+        sprintf(op_code, "%s = %s * %s\n%s = %s\n", temp, $1.place, $3.place, $1.place, temp);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | unary_expr DIV_ASSIGN expr {
         $$.place = $1.place;
-        char *temp = new_temp();
-        emit("%s = %s / %s\n", temp, $1.place, $3.place);
-        emit("%s = %s\n", $1.place, temp);
-        $$.code = $3.code;
+        char* temp = new_temp();
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(200);
+        sprintf(op_code, "%s = %s / %s\n%s = %s\n", temp, $1.place, $3.place, $1.place, temp);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | unary_expr MOD_ASSIGN expr {
         $$.place = $1.place;
-        char *temp = new_temp();
-        emit("%s = %s %% %s\n", temp, $1.place, $3.place);
-        emit("%s = %s\n", $1.place, temp);
-        $$.code = $3.code;
+        char* temp = new_temp();
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(200);
+        sprintf(op_code, "%s = %s %% %s\n%s = %s\n", temp, $1.place, $3.place, $1.place, temp);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     ;
 
@@ -396,13 +399,21 @@ logical_expr
     }
     | logical_expr AND relational_expr {
         $$.place = new_temp();
-        emit("%s = %s && %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s && %s\n", $$.place, $1.place, $3.place);
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | logical_expr OR relational_expr {
         $$.place = new_temp();
-        emit("%s = %s || %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s || %s\n", $$.place, $1.place, $3.place);
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     ;
 
@@ -413,33 +424,69 @@ relational_expr
     }
     | relational_expr EQ additive_expr {
         $$.place = new_temp();
-        emit("%s = %s == %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s == %s\n", $$.place, $1.place, $3.place);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | relational_expr NEQ additive_expr {
         $$.place = new_temp();
-        emit("%s = %s != %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s != %s\n", $$.place, $1.place, $3.place);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | relational_expr GT additive_expr {
         $$.place = new_temp();
-        emit("%s = %s > %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s > %s\n", $$.place, $1.place, $3.place);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | relational_expr LT additive_expr {
         $$.place = new_temp();
-        emit("%s = %s < %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s < %s\n", $$.place, $1.place, $3.place);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | relational_expr GTE additive_expr {
         $$.place = new_temp();
-        emit("%s = %s >= %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s >= %s\n", $$.place, $1.place, $3.place);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | relational_expr LTE additive_expr {
         $$.place = new_temp();
-        emit("%s = %s <= %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s <= %s\n", $$.place, $1.place, $3.place);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     ;
 
@@ -450,13 +497,25 @@ additive_expr
     }
     | additive_expr PLUS multiplicative_expr {
         $$.place = new_temp();
-        emit("%s = %s + %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s + %s\n", $$.place, $1.place, $3.place);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | additive_expr MINUS multiplicative_expr {
         $$.place = new_temp();
-        emit("%s = %s - %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s - %s\n", $$.place, $1.place, $3.place);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     ;
 
@@ -467,18 +526,36 @@ multiplicative_expr
     }
     | multiplicative_expr MULT unary_expr {
         $$.place = new_temp();
-        emit("%s = %s * %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s * %s\n", $$.place, $1.place, $3.place);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | multiplicative_expr DIV unary_expr {
         $$.place = new_temp();
-        emit("%s = %s / %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s / %s\n", $$.place, $1.place, $3.place);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     | multiplicative_expr MOD unary_expr {
         $$.place = new_temp();
-        emit("%s = %s %% %s\n", $$.place, $1.place, $3.place);
-        $$.code = $1.code;
+        
+        char* code = concat_code($1.code, $3.code);
+        char* op_code = (char*)malloc(100);
+        sprintf(op_code, "%s = %s %% %s\n", $$.place, $1.place, $3.place);
+        
+        $$.code = concat_code(code, op_code);
+        free(code);
+        free(op_code);
     }
     ;
 
@@ -489,25 +566,29 @@ unary_expr
     }
     | INC unary_expr {
         $$.place = new_temp();
-        emit("%s = %s + 1\n", $$.place, $2.place);
-        emit("%s = %s\n", $2.place, $$.place);
-        $$.code = $2.code;
+        char* code = (char*)malloc(200 + strlen($2.code));
+        sprintf(code, "%s%s = %s + 1\n%s = %s\n", 
+                $2.code, $$.place, $2.place, $2.place, $$.place);
+        $$.code = code;
     }
     | DEC unary_expr {
         $$.place = new_temp();
-        emit("%s = %s - 1\n", $$.place, $2.place);
-        emit("%s = %s\n", $2.place, $$.place);
-        $$.code = $2.code;
+        char* code = (char*)malloc(200 + strlen($2.code));
+        sprintf(code, "%s%s = %s - 1\n%s = %s\n", 
+                $2.code, $$.place, $2.place, $2.place, $$.place);
+        $$.code = code;
     }
     | MINUS unary_expr %prec UMINUS {
         $$.place = new_temp();
-        emit("%s = -%s\n", $$.place, $2.place);
-        $$.code = $2.code;
+        char* code = (char*)malloc(100 + strlen($2.code));
+        sprintf(code, "%s%s = -%s\n", $2.code, $$.place, $2.place);
+        $$.code = code;
     }
     | NOT unary_expr {
         $$.place = new_temp();
-        emit("%s = !%s\n", $$.place, $2.place);
-        $$.code = $2.code;
+        char* code = (char*)malloc(100 + strlen($2.code));
+        sprintf(code, "%s%s = !%s\n", $2.code, $$.place, $2.place);
+        $$.code = code;
     }
     ;
 
@@ -518,25 +599,31 @@ postfix_expr
     }
     | postfix_expr INC {
         $$.place = new_temp();
-        emit("%s = %s\n", $$.place, $1.place);
-        emit("%s = %s + 1\n", $1.place, $1.place);
-        $$.code = $1.code;
+        char* code = (char*)malloc(200 + strlen($1.code));
+        sprintf(code, "%s%s = %s\n%s = %s + 1\n", 
+                $1.code, $$.place, $1.place, $1.place, $1.place);
+        $$.code = code;
     }
     | postfix_expr DEC {
         $$.place = new_temp();
-        emit("%s = %s\n", $$.place, $1.place);
-        emit("%s = %s - 1\n", $1.place, $1.place);
-        $$.code = $1.code;
+        char* code = (char*)malloc(200 + strlen($1.code));
+        sprintf(code, "%s%s = %s\n%s = %s - 1\n", 
+                $1.code, $$.place, $1.place, $1.place, $1.place);
+        $$.code = code;
     }
     | postfix_expr LPAREN argument_list RPAREN {
         $$.place = new_temp();
-        emit("%s = call %s\n", $$.place, $1.place);
-        $$.code = $1.code;
+        // For function calls, include argument list code first
+        char* call_code = (char*)malloc(100 + strlen($1.code) + strlen($3.code));
+        sprintf(call_code, "%s%s%s = call %s\n", 
+                $1.code, $3.code, $$.place, $1.place);
+        $$.code = call_code;
     }
     | postfix_expr LPAREN RPAREN {
         $$.place = new_temp();
-        emit("%s = call %s\n", $$.place, $1.place);
-        $$.code = $1.code;
+        char* call_code = (char*)malloc(100 + strlen($1.code));
+        sprintf(call_code, "%s%s = call %s\n", $1.code, $$.place, $1.place);
+        $$.code = call_code;
     }
     ;
 
@@ -575,12 +662,27 @@ primary_expr
     }
     ;
 
+argument_list_opt
+    : /* empty */ {
+        $$.code = strdup("");
+    }
+    | argument_list {
+        $$.code = $1.code;
+    }
+    ;
+
 argument_list
     : expr {
-        emit("PARAM %s\n", $1.place);
+        char* code = (char*)malloc(strlen($1.code) + 100);
+        sprintf(code, "%sPARAM %s\n", $1.code, $1.place);
+        $$.code = code;
     }
     | argument_list COMMA expr {
-        emit("PARAM %s\n", $3.place);
+        char* code1 = $1.code;
+        char* code2 = (char*)malloc(strlen($3.code) + 100);
+        sprintf(code2, "%sPARAM %s\n", $3.code, $3.place);
+        $$.code = concat_code(code1, code2);
+        free(code2);
     }
     ;
 
@@ -659,6 +761,17 @@ ControlLabels top_control() {
     }
     ControlLabels default_labels = {-1, -1};
     return default_labels;
+}
+
+// Helper function to concatenate two code strings
+char* concat_code(char* code1, char* code2) {
+    if (code1 == NULL) return strdup(code2 ? code2 : "");
+    if (code2 == NULL) return strdup(code1);
+    
+    char* result = (char*)malloc(strlen(code1) + strlen(code2) + 1);
+    strcpy(result, code1);
+    strcat(result, code2);
+    return result;
 }
 
 int main(int argc, char *argv[]) {
