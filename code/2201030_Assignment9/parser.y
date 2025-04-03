@@ -231,6 +231,7 @@ selection_statement
     : IF LPAREN expr RPAREN statement %prec IFX {
         int true_label = new_label();
         int false_label = new_label();
+        emit("%s", $3.code);  // Emit condition code
         emit("IF %s GOTO L%d\n", $3.place, true_label);
         emit("GOTO L%d\n", false_label);
         emit("LABEL L%d:\n", true_label);
@@ -242,6 +243,7 @@ selection_statement
         int true_label = new_label();
         int false_label = new_label();
         int end_label = new_label();
+        emit("%s", $3.code);  // Emit condition code
         emit("IF %s GOTO L%d\n", $3.place, true_label);
         emit("GOTO L%d\n", false_label);
         emit("LABEL L%d:\n", true_label);
@@ -256,27 +258,21 @@ selection_statement
 
 iteration_statement
     : WHILE {
-        // Store start label
         int start_label = new_label(); 
         emit("LABEL L%d:\n", start_label);
         $<ival>$ = start_label;
     } LPAREN expr RPAREN statement {
-        // Generate true and end labels
         int true_label = new_label();
         int end_label = new_label();
         
-        // Conditional jump
+        // Emit condition code
+        emit("%s", $4.code);
         emit("IF %s GOTO L%d\n", $4.place, true_label);
         emit("GOTO L%d\n", end_label);
         
-        // True branch
         emit("LABEL L%d:\n", true_label);
         emit("%s", $6.code);
-        
-        // Loop back
         emit("GOTO L%d\n", $<ival>1);
-        
-        // End label
         emit("LABEL L%d:\n", end_label);
         $$.code = strdup("");
     }

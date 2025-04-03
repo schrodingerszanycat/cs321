@@ -7,6 +7,10 @@
 int line_num = 1;
 %}
 
+%option noyywrap
+%option noinput
+%option nounput
+
 %%
 [ \t]                       { /* Ignore whitespace */ }
 \n                          { line_num++; }
