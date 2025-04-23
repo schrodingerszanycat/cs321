@@ -1,0 +1,15 @@
+aabbccdd
+abcd
+ad
+bc
+
+aabcdd
+abbcd
+acbd
+abc
+abd
+bcd
+a b c d
+xyz
+aaabbbcccdd
+aaabbbccddd

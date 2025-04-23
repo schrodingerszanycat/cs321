@@ -1,0 +1,163 @@
+Grammar
+
+    0 $accept: S $end
+
+    1 S: D S
+    2  | ε
+
+    3 D: T id_list ';'
+
+    4 T: INT
+    5  | FLOAT
+    6  | CHAR
+
+    7 id_list: id_list ',' ID
+    8        | ID
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    ',' (44) 7
+    ';' (59) 3
+    error (256)
+    ID <str> (258) 7 8
+    INT <str> (259) 4
+    FLOAT <str> (260) 5
+    CHAR <str> (261) 6
+
+
+Nonterminals, with rules where they appear
+
+    $accept (9)
+        on left: 0
+    S (10)
+        on left: 1 2
+        on right: 0 1
+    D (11)
+        on left: 3
+        on right: 1
+    T <str> (12)
+        on left: 4 5 6
+        on right: 3
+    id_list (13)
+        on left: 7 8
+        on right: 3 7
+
+
+State 0
+
+    0 $accept: • S $end
+
+    INT    shift, and go to state 1
+    FLOAT  shift, and go to state 2
+    CHAR   shift, and go to state 3
+
+    $default  reduce using rule 2 (S)
+
+    S  go to state 4
+    D  go to state 5
+    T  go to state 6
+
+
+State 1
+
+    4 T: INT •
+
+    $default  reduce using rule 4 (T)
+
+
+State 2
+
+    5 T: FLOAT •
+
+    $default  reduce using rule 5 (T)
+
+
+State 3
+
+    6 T: CHAR •
+
+    $default  reduce using rule 6 (T)
+
+
+State 4
+
+    0 $accept: S • $end
+
+    $end  shift, and go to state 7
+
+
+State 5
+
+    1 S: D • S
+
+    INT    shift, and go to state 1
+    FLOAT  shift, and go to state 2
+    CHAR   shift, and go to state 3
+
+    $default  reduce using rule 2 (S)
+
+    S  go to state 8
+    D  go to state 5
+    T  go to state 6
+
+
+State 6
+
+    3 D: T • id_list ';'
+
+    ID  shift, and go to state 9
+
+    id_list  go to state 10
+
+
+State 7
+
+    0 $accept: S $end •
+
+    $default  accept
+
+
+State 8
+
+    1 S: D S •
+
+    $default  reduce using rule 1 (S)
+
+
+State 9
+
+    8 id_list: ID •
+
+    $default  reduce using rule 8 (id_list)
+
+
+State 10
+
+    3 D: T id_list • ';'
+    7 id_list: id_list • ',' ID
+
+    ';'  shift, and go to state 11
+    ','  shift, and go to state 12
+
+
+State 11
+
+    3 D: T id_list ';' •
+
+    $default  reduce using rule 3 (D)
+
+
+State 12
+
+    7 id_list: id_list ',' • ID
+
+    ID  shift, and go to state 13
+
+
+State 13
+
+    7 id_list: id_list ',' ID •
+
+    $default  reduce using rule 7 (id_list)
