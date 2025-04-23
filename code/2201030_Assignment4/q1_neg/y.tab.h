@@ -54,13 +54,19 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    TERMINAL = 258,                /* TERMINAL  */
-    ADD = 259,                     /* ADD  */
-    MULTIPLY = 260,                /* MULTIPLY  */
-    LEFT_PAREN = 261,              /* LEFT_PAREN  */
-    RIGHT_PAREN = 262,             /* RIGHT_PAREN  */
-    END_OF_STREAM = 263,           /* END_OF_STREAM  */
-    END_OF_INPUT = 264             /* END_OF_INPUT  */
+    NUMBER = 258,                  /* NUMBER  */
+    FLOAT = 259,                   /* FLOAT  */
+    ADD = 260,                     /* ADD  */
+    SUB = 261,                     /* SUB  */
+    MUL = 262,                     /* MUL  */
+    DIV = 263,                     /* DIV  */
+    LPAREN = 264,                  /* LPAREN  */
+    RPAREN = 265,                  /* RPAREN  */
+    LCURL = 266,                   /* LCURL  */
+    RCURL = 267,                   /* RCURL  */
+    LSQUARE = 268,                 /* LSQUARE  */
+    RSQUARE = 269,                 /* RSQUARE  */
+    UMINUS = 270                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -69,24 +75,30 @@ extern int yydebug;
 #define YYEOF 0
 #define YYerror 256
 #define YYUNDEF 257
-#define TERMINAL 258
-#define ADD 259
-#define MULTIPLY 260
-#define LEFT_PAREN 261
-#define RIGHT_PAREN 262
-#define END_OF_STREAM 263
-#define END_OF_INPUT 264
+#define NUMBER 258
+#define FLOAT 259
+#define ADD 260
+#define SUB 261
+#define MUL 262
+#define DIV 263
+#define LPAREN 264
+#define RPAREN 265
+#define LCURL 266
+#define RCURL 267
+#define LSQUARE 268
+#define RSQUARE 269
+#define UMINUS 270
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 127 "ll1.y"
+#line 12 "calc.y"
 
-    char *string;
-    int   token_code;
+    int ival;
+    double dval;
 
-#line 90 "y.tab.h"
+#line 102 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

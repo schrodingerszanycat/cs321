@@ -4,7 +4,7 @@ CREATE TABLE employees (
     position VARCHAR(50)
 );
 
-INSERT INTO employees (id, name, position) VALUES (1, ' CREATE ', 'Manager');
+INSERT INTO employees (id, name, position) VALUES (1, 'CREATE', 'Manager');
 INSERT INTO employees (id, name, position) VALUES (2, 'Bob', 'Engineer');
 INSERT INTO employees (id, name, position) VALUES (3, 'Charlie', 'Analyst');
 
