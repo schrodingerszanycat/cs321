@@ -9,7 +9,7 @@ int is_compound = 0;
 connectors "and"|"And"|"aNd"|"anD"|"AND"|"ANd"|"aND"|"AnD"|"but"|"But"|"bUt"|"buT"|"BUT"|"BUt"|"bUT"|"BuT"|"or"|"Or"|"oR"|"OR"|"nor"|"Nor"|"nOr"|"noR"|"NOR"|"NOr"|"nOR"|"NoR"|"for"|"For"|"fOr"|"foR"|"FOR"|"FOr"|"fOR"|"FoR"|"yet"|"Yet"|"yEt"|"yeT"|"YET"|"YEt"|"yET"|"YeT"|"so"|"So"|"sO"|"SO"  
 
 %%
-\b{connectors}                            { is_compound = 1; }
+{connectors}                            { is_compound = 1; }
 [ \t\n]                                  ;
 (.)                                      ;  
 

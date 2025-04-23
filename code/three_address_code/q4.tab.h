@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_Y_TAB_H_INCLUDED
-# define YY_YY_Y_TAB_H_INCLUDED
+#ifndef YY_YY_Q4_TAB_H_INCLUDED
+# define YY_YY_Q4_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -54,64 +54,40 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    SELECT = 258,                  /* SELECT  */
-    INSERT = 259,                  /* INSERT  */
-    INTO = 260,                    /* INTO  */
-    VALUES = 261,                  /* VALUES  */
-    UPDATE = 262,                  /* UPDATE  */
-    SET = 263,                     /* SET  */
-    DELETE = 264,                  /* DELETE  */
-    FROM = 265,                    /* FROM  */
-    CREATE = 266,                  /* CREATE  */
-    TABLE = 267,                   /* TABLE  */
-    WHERE = 268,                   /* WHERE  */
-    STAR = 269,                    /* STAR  */
-    EQUALS = 270,                  /* EQUALS  */
-    COMMA = 271,                   /* COMMA  */
-    SEMICOLON = 272,               /* SEMICOLON  */
-    LPAREN = 273,                  /* LPAREN  */
-    RPAREN = 274,                  /* RPAREN  */
-    IDENTIFIER = 275,              /* IDENTIFIER  */
-    NUMBER = 276,                  /* NUMBER  */
-    STRING = 277                   /* STRING  */
+    IF = 258,                      /* IF  */
+    ELSE = 259,                    /* ELSE  */
+    WHILE = 260,                   /* WHILE  */
+    INT = 261,                     /* INT  */
+    FLOAT = 262,                   /* FLOAT  */
+    VOID = 263,                    /* VOID  */
+    RETURN = 264,                  /* RETURN  */
+    EQ = 265,                      /* EQ  */
+    NE = 266,                      /* NE  */
+    LE = 267,                      /* LE  */
+    GE = 268,                      /* GE  */
+    LT = 269,                      /* LT  */
+    GT = 270,                      /* GT  */
+    AND = 271,                     /* AND  */
+    OR = 272,                      /* OR  */
+    NUMBER = 273,                  /* NUMBER  */
+    FLOAT_NUM = 274,               /* FLOAT_NUM  */
+    ID = 275                       /* ID  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
-/* Token kinds.  */
-#define YYEMPTY -2
-#define YYEOF 0
-#define YYerror 256
-#define YYUNDEF 257
-#define SELECT 258
-#define INSERT 259
-#define INTO 260
-#define VALUES 261
-#define UPDATE 262
-#define SET 263
-#define DELETE 264
-#define FROM 265
-#define CREATE 266
-#define TABLE 267
-#define WHERE 268
-#define STAR 269
-#define EQUALS 270
-#define COMMA 271
-#define SEMICOLON 272
-#define LPAREN 273
-#define RPAREN 274
-#define IDENTIFIER 275
-#define NUMBER 276
-#define STRING 277
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 23 "1.y"
+#line 97 "q4.y"
 
-    char *str;
+    int num;
+    float fnum;
+    char *id;
+    struct attr *attr;
 
-#line 115 "y.tab.h"
+#line 91 "q4.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -126,4 +102,4 @@ extern YYSTYPE yylval;
 int yyparse (void);
 
 
-#endif /* !YY_YY_Y_TAB_H_INCLUDED  */
+#endif /* !YY_YY_Q4_TAB_H_INCLUDED  */

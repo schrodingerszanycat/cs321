@@ -43,7 +43,6 @@ query: select_statement SEMICOLON { printf("Valid SELECT query.\n"); }
     | update_statement SEMICOLON { printf("Valid UPDATE query.\n"); }
     | delete_statement SEMICOLON { printf("Valid DELETE query.\n"); }
     | create_table_statement SEMICOLON { printf("Valid CREATE TABLE query.\n"); }
-
 ;
 
 select_statement: SELECT columns FROM table where_clause;
